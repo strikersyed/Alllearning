@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "669569557078",
+    "firebase_url": "https://alllearnin865-6902e.firebaseio.com",
+    "project_id": "alllearnin865-6902e",
+    "storage_bucket": "alllearnin865-6902e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669569557078:android:0acc157ef1fd016cbe91f7",
+        "android_client_info": {
+          "package_name": "com.ast.taskApp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669569557078-hfu258u7pfdan4llt8l9ls4m8erradq3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6nlrFEkHYkr7H9DeCF5y2GkREBYTmeMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669569557078-ukcdjli58b9hmovabo97qqo3kn2r6u78.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "669569557078-q4ou1lsonupa2hcj4lc3h3k3u14tl37p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.colworx.alllearnin865"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669569557078:android:1482817b36e9d2ebbe91f7",
+        "android_client_info": {
+          "package_name": "com.example.alllearning"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669569557078-cfik3r1f2psc6jlejad6j50rvmqn7v2o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.alllearning",
+            "certificate_hash": "12591178bd91cfe39607a777cd9b53abbf900921"
+          }
+        },
+        {
+          "client_id": "669569557078-mr2j2l4sdf5qfkdrpi7smbld5bn814u4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.alllearning",
+            "certificate_hash": "c10c9bf3d86ad28c5f62b46b6f1d1cb3144ca14e"
+          }
+        },
+        {
+          "client_id": "669569557078-hfu258u7pfdan4llt8l9ls4m8erradq3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6nlrFEkHYkr7H9DeCF5y2GkREBYTmeMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669569557078-ukcdjli58b9hmovabo97qqo3kn2r6u78.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "669569557078-q4ou1lsonupa2hcj4lc3h3k3u14tl37p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.colworx.alllearnin865"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

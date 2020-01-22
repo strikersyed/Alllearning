@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Subscription3"
+    android:background="@drawable/round_corner_back">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/subimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/subs_vector_3"
+            android:layout_marginBottom="50dp"
+
+            />
+
+        <TextView
+
+            android:id="@+id/heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$0.99/mo"
+            android:textSize="15sp"
+            android:textColor="#000"
+            android:layout_gravity="center"
+            />
+
+        <TextView
+            android:id="@+id/descript"
+            android:layout_marginTop="5dp"
+            android:layout_below="@id/heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Upgrade to Pro"
+            android:textSize="15sp"
+            android:layout_gravity="center"
+            android:textColor="#000"
+            />
+
+
+
+        <TextView
+            android:id="@+id/descript1"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change Background Color"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+
+        <TextView
+            android:id="@+id/descript3"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="Free for 10 Days, and cancel"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+        <TextView
+            android:id="@+id/descript4"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="Unlimited Photos to Upload"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+
+            />
+        <TextView
+            android:id="@+id/descript5"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="Alarm Notifications"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+        <TextView
+            android:id="@+id/descript6"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="No Ads"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+        <TextView
+            android:id="@+id/descript2"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="Manage Tasks"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+
+        <TextView
+            android:id="@+id/descript7"
+            android:layout_marginTop="0dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:text="Set Alarm Tone"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+            />
+    </LinearLayout>
+
+
+</RelativeLayout>

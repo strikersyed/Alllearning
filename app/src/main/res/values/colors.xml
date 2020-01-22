@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#416AF3</color>
+    <color name="darkback">#1471BB</color>
+    <color name="theme">#FF2196F3</color>
+    <color name="darkblue">#3F51B5</color>
+    <color name="background">#406AF2</color>
+    <color name="blue">#416AF3</color>
+    <color name="glide_slider_background_color">#FFFFFF</color>
+
+    <color name="spt">#22030303</color>
+    <color name="black">#000</color>
+    <color name="white">#FFF</color>
+    <color name="grey1">#D6D4D7</color>
+    <color name="transparent">#00000000</color>
+    <color name="grey_text">#c7c3c9</color>
+    <color name="grey_spt">#efeaf2</color>
+    <color name="red">#FF0000</color>
+
+    <color name="themeColor">#416AF3</color>
+</resources>

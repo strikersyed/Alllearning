@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".TaskTimer"
+    android:background="@color/background"
+    >
+
+    <androidx.appcompat.widget.Toolbar
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:id="@+id/toolbar">
+
+
+    </androidx.appcompat.widget.Toolbar>
+
+
+
+
+
+
+
+
+
+
+
+
+    <RelativeLayout
+        android:id="@+id/countdowntimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true">
+
+       <!-- <douglasspgyn.com.github.circularcountdown.CircularCountdown
+            android:id="@+id/circularCountdown"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            app:countdownBackgroundColor="@color/colorAccent"
+            app:countdownForegroundColor="@color/colorPrimary"
+            app:countdownTextColor="@android:color/white"
+            app:countdownTextSize="24sp" />-->
+
+        <ProgressBar
+            android:id="@+id/progressBarCircle"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="270dp"
+            android:layout_height="270dp"
+            android:layout_centerInParent="true"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="100"
+            android:progressDrawable="@drawable/circle_lightblue"
+            android:rotation="-90" />
+
+
+        <TextView
+            android:id="@+id/textViewTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="00:01:00"
+            android:textColor="@android:color/white"
+            android:textSize="24sp" />
+
+
+
+
+
+
+    </RelativeLayout>
+
+
+
+</RelativeLayout>

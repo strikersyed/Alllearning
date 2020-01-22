@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@android:color/white"
+    >
+
+    <com.glide.slider.library.SliderLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/slider"
+        app:indicator_visibility="visible"
+        android:layout_above="@id/indicator"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        />
+
+
+    <com.glide.slider.library.indicators.PagerIndicator
+        android:layout_above="@id/signin_layout"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        app:selected_color="#FF2196F3"
+        app:unselected_color="#D6D6D6"
+        app:shape="oval"
+        android:layout_marginBottom="100dp"
+        />
+
+
+  <!--<com.google.android.gms.common.SignInButton
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:id="@+id/sign_in"
+      android:layout_centerHorizontal="true"
+      android:layout_alignParentBottom="true"
+      android:layout_marginBottom="60dp"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentRight="true"
+      android:layout_marginLeft="50dp"
+      android:layout_marginRight="50dp"
+      ></com.google.android.gms.common.SignInButton>-->
+
+    <RelativeLayout
+        android:id="@+id/signin_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:elevation="10dp">
+    <ImageButton
+        android:id="@+id/sign_in"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/google_btn"
+        android:layout_centerHorizontal="true"
+        android:text="CONNECT WITH GOOGLE"
+        android:background="@android:color/transparent"
+        android:textColor="#fff"
+        />
+
+
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

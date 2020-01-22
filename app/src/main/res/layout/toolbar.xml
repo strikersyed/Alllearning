@@ -1,0 +1,56 @@
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar_home"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:layout_gravity="center"
+    android:paddingTop="30dp"
+
+    android:background="#FF0077D1"
+    android:padding="8dp"
+    android:theme="@style/Base.Theme.AppCompat.Light"
+    app:popupTheme="@style/Base.ThemeOverlay.AppCompat.Light">
+
+    <LinearLayout
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="15dp"
+        android:orientation="horizontal"
+        >
+        <ImageView
+            android:layout_gravity="center"
+            android:padding="5dp"
+            android:id="@+id/back_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BACK"
+            android:textColor="#fff"
+            android:textSize="10sp"
+            />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:text="INTRODUKTION"
+        android:id="@+id/main_appbar_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textColor="#fff"
+        android:textSize="15sp"
+        />
+
+
+
+
+
+</android.support.v7.widget.Toolbar>

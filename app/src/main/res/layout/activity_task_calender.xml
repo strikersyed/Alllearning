@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CalenderView"
+    android:background="@android:color/white">
+
+
+
+
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/toolbar">
+
+
+        <ImageButton
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_arrow_back"
+            android:backgroundTint="@android:color/transparent"
+
+            />
+
+
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <LinearLayout
+        android:layout_below="@id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/welcomelayout"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/welcome"
+            android:text="New Task"
+            android:textSize="20dp"
+            android:textColor="#000"
+            android:textStyle="bold"
+            />
+
+        <TextView
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/daysindicator"
+            android:text="Add a new task to your task list"
+            android:textColor="#000"
+            android:textSize="10sp"
+            />
+
+
+
+
+
+
+    </LinearLayout>
+
+
+
+
+
+
+    <LinearLayout
+        android:layout_below="@id/welcomelayout"
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:weightSum="10"
+        android:orientation="horizontal"
+        android:layout_marginTop="-30dp"
+        >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="8.9"
+            android:orientation="vertical"
+            android:gravity="bottom|center_vertical"
+            >
+
+            <TextView
+                android:id="@+id/month"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:paddingLeft="10dp"
+
+                />
+
+            <TextView
+                android:id="@+id/year"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:layout_marginBottom="15dp"
+
+                />
+
+
+
+
+        </LinearLayout>
+
+        <com.guojunustb.library.WeekHeaderView
+            android:layout_weight="1"
+            android:id="@+id/weekheaderview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:elevation="10dp"
+            app:firstDayOfWeek2="sunday"
+            app:headerDayLabelNormalTextColor="#000000"
+            app:headerDayLabelTextSize="20sp"
+            app:headerDayLabelTodayTextColor="#000"
+            app:headerFocusBackgroundColor="#406AF2"
+            app:headerFocusSameDayBackgroundColor="@color/darkblue"
+            app:headerFocusSameDayTextColor="#ffff"
+            app:headerFocusTextColor="#fff"
+            app:headerPaddingTop="20dp"
+            app:headerRowGap="40dp"
+            app:headerWeekLabelTextColor="#fff"
+            app:headerWeekLabelTextSize="16sp" />
+
+
+
+
+    </LinearLayout>
+
+
+    <com.guojunustb.library.WeekDayView
+        android:layout_below="@id/header"
+        android:id="@+id/weekdayview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:columnGap="5dp"
+        app:dayBackgroundColor="#ffffffff"
+        app:headerColumnPadding="8dp"
+        app:eventTextColor="@android:color/white"
+        app:headerRowPadding="12dp"
+        app:hourHeight="60dp"
+        app:noOfVisibleDays="1"
+        app:textSize="12sp"
+        app:eventTextSize="15sp"
+        app:todayBackgroundColor="#1848adff"
+        app:todayHeaderTextColor="#000" />
+</RelativeLayout>

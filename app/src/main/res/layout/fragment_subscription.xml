@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Subscription"
+    android:background="@drawable/round_corner_back"
+    android:backgroundTint="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/subimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/subs_vector_1"
+            android:layout_marginBottom="70dp"
+
+            />
+
+        <TextView
+
+            android:id="@+id/heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10 DAYS"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#000"
+            android:layout_gravity="center"
+            />
+
+        <TextView
+            android:id="@+id/descript"
+            android:layout_marginTop="5dp"
+            android:layout_below="@id/heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Free Trial"
+            android:textSize="15sp"
+            android:layout_gravity="center"
+            android:textColor="#000"
+            />
+
+
+
+        <TextView
+            android:id="@+id/descript1"
+            android:layout_marginTop="20dp"
+            android:layout_below="@id/descript"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Free for 10 Days, and cancel"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+
+            />
+
+        <TextView
+            android:layout_below="@id/descript1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="anytime"
+            android:fontFamily="@font/sf_ui_text_light"
+            android:textSize="13sp"
+            android:layout_gravity="center"
+
+
+            />
+    </LinearLayout>
+
+
+
+</RelativeLayout>
