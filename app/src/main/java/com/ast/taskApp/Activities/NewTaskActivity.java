@@ -38,7 +38,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.work.Constraints;
 import androidx.work.Data;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import com.ast.taskApp.AlarmReceiver;
 import com.ast.taskApp.BaseClasses.BaseActivity;
@@ -50,6 +55,7 @@ import com.ast.taskApp.TaskApp;
 import com.ast.taskApp.TaskDB;
 import com.ast.taskApp.Utils.Constants;
 import com.ast.taskApp.Utils.PreferenceUtils;
+import com.ast.taskApp.Workers.TaskStartWorker;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -58,6 +64,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.jaredrummler.materialspinner.MaterialSpinner;
+import com.novoda.merlin.MerlinsBeard;
 import com.unsplash.pickerandroid.photopicker.UnsplashPhotoPicker;
 import com.unsplash.pickerandroid.photopicker.data.UnsplashPhoto;
 import com.unsplash.pickerandroid.photopicker.presentation.UnsplashPickerActivity;
@@ -83,6 +90,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     long startTimeInMillis;
     long endTimeInMillis;
     ArrayList<String> daysList;
+    Constraints constraints;
 
     MaterialSpinner ringtone_selector;
     private EditText task_name, task_place;
@@ -93,7 +101,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     private CheckBox mon, tue, wed, thu, fri, sat, sun;
     private TextView image_name;
     private LinearLayout taskName_layout;
-
+    WorkManager workManager;
     private boolean isStart = true;
     private boolean isEnd = false;
     private String taskTag = "testing";
@@ -103,6 +111,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     private String taskid;
     private String photourl;
     private Uri tuneUri, imageUri;
+    MerlinsBeard merlinsBeard;
+    OneTimeWorkRequest oneTimeWorkRequest;
 
     //ProgressDialog dialog;
 
@@ -145,7 +155,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     }
 
     private void setUpViews() {
-
+        workManager = WorkManager.getInstance();
         taskDB = new TaskDB(this);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         calendar = Calendar.getInstance();
@@ -155,7 +165,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         daysList = new ArrayList<>();
 
         //dialog = new ProgressDialog(this);
-
+        merlinsBeard = new MerlinsBeard.Builder().build(this);
         back_btn = findViewById(R.id.back_btn);
         task_name = findViewById(R.id.task_name);
         task_place = findViewById(R.id.task_place);
@@ -192,6 +202,9 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         onstart.setOnClickListener(this);
         onend.setOnClickListener(this);
         add_btn.setOnClickListener(this);
+        constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
 
         repeat.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -410,12 +423,12 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
 
         Data.Builder data = new Data.Builder();
         data.putString("TaskID", taskid);
-        data.putLong("starttime", startTimeInMillis);
+        /*data.putLong("starttime", startTimeInMillis);
         data.putLong("endtime", endTimeInMillis);
         data.putBoolean("vibrationstart", isStart);
         data.putBoolean("vibrationend", isEnd);
         data.putString("ringname", ringtone);
-        data.putString("ringtone", tuneUri.toString());
+        data.putString("ringtone", tuneUri.toString());*/
 
         if (photourl != null && imageUri == null) {
 
@@ -441,25 +454,21 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
             tasks.setFromSplash("1");
             tasks.setAlaramID(alarmId);
 
-            TaskApp.getFirestore().collection("Tasks")
-                    .document(taskid)
-                    .set(tasks)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
-                                Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
-                                //Intent intent = new Intent(context, Home.class);
-                                //startActivity(intent);
-                                setAlarmStartTime(startTimeInMillis);
-                                setAlarmEndTime(endTimeInMillis);
-                                TaskApp.getTaskRepo().insertTasks(tasks);
-                                //dialog.dismiss();
 
-                            }
-                        }
-                    });
+
+            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
+                    .setConstraints(constraints)
+                    .setInputData(data.build())
+                    .build();
+            workManager.enqueue(oneTimeWorkRequest);
+            /*TaskApp.getFirestore().collection("Tasks")
+                    .document(taskid)
+                    .set(tasks);*/
+            makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
+            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
+            setAlarmStartTime(startTimeInMillis);
+            setAlarmEndTime(endTimeInMillis);
+            TaskApp.getTaskRepo().insertTasks(tasks);
         } else if (imageUri != null && photourl == null) {
 
             final StorageReference fileRef = TaskApp.getStorage().child("Tasks").child(taskid).child("Attatchment").child("mountains" + "." + getExtension(imageUri));
@@ -496,7 +505,18 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                                             tasks.setAlaramID(alarmId);
 
 
-                                            TaskApp.getFirestore().collection("Tasks")
+                                            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
+                                                    .setConstraints(constraints)
+                                                    .setInputData(data.build())
+                                                    .build();
+                                            workManager.enqueue(oneTimeWorkRequest);
+                                            makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
+                                            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
+                                            setAlarmStartTime(startTimeInMillis);
+                                            setAlarmEndTime(endTimeInMillis);
+                                            TaskApp.getTaskRepo().insertTasks(tasks);
+
+                                            /*TaskApp.getFirestore().collection("Tasks")
                                                     .document(taskid)
                                                     .set(tasks)
                                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -513,7 +533,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                                                                 //dialog.dismiss();
                                                             }
                                                         }
-                                                    });
+                                                    });*/
 
                                         }
                                     });

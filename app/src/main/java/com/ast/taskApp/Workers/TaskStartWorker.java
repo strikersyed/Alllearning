@@ -4,7 +4,11 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.icu.util.Calendar;
+import java.util.Calendar;
+
+
+
+
 import android.net.Uri;
 import android.os.Build;
 
@@ -15,45 +19,62 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.ast.taskApp.AlarmReceiver;
+import com.ast.taskApp.Models.Tasks;
+import com.ast.taskApp.TaskApp;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 
 import static android.content.Context.ALARM_SERVICE;
 
 public class TaskStartWorker extends Worker {
 
-    String Ringname,TaskID,tskname,imageurl;
-    Boolean vibration;
-    Uri tuneuri;
+    String TaskID;
     Context context;
-    PendingIntent pendingIntent;
-    AlarmManager alarmManager;
     Timestamp timestamp;
+    Boolean uploaded;
     public TaskStartWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         this.context = context;
         workerParams.getInputData();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @NonNull
     @Override
     public Result doWork() {
-        alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+
         Data data = getInputData();
-        tuneuri = Uri.parse(data.getString("ringtone"));
-        vibration = data.getBoolean("vibrationstart",true);
-        Ringname = data.getString("ringname");
         TaskID = data.getString("TaskID");
-        tskname = data.getString("name");
-        imageurl = data.getString("imageurl");
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(data.getLong("starttime",0));
-        timestamp = new Timestamp(calendar.getTime());
-        //setAlarmStartTime(timestamp);
-        return Result.success();
+        Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
+        TaskApp.getFirestore()
+                .collection("Tasks")
+                .document(TaskID)
+                .set(tasks)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()){
+
+                            uploaded = true;
+
+                        }
+                        else {
+                            uploaded = false;
+                        }
+
+                    }
+                });
+        if (uploaded){
+            return  Result.success();
+        }
+        else {
+            return Result.retry();
+        }
+
+
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    /*@RequiresApi(api = Build.VERSION_CODES.N)*//*
     public void setstartalarmtime(Timestamp timestamp){
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.MINUTE,timestamp.toDate().getMinutes());
@@ -83,5 +104,5 @@ public class TaskStartWorker extends Worker {
         pendingIntent = PendingIntent.getBroadcast(context, 0, myIntent, PendingIntent.FLAG_ONE_SHOT);
         alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
         //alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),AlarmManager.INTERVAL_HALF_HOUR,pendingIntent);
-    }
+    }*/
 }

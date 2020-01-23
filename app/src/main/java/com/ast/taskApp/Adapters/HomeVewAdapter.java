@@ -3,6 +3,7 @@ package com.ast.taskApp.Adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,15 +112,15 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todayoverbtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<todayindex+todaycnt) {
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","today");
                             mcontext.startActivity(intent);
-                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<tomowindex+tomowcnt){
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tomowindex+tomowcnt){
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","tomorrow");
                             mcontext.startActivity(intent);
-                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<upcmindex+upcmcnt){
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=upcmindex+upcmcnt){
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","upcoming");
                             mcontext.startActivity(intent);
@@ -128,7 +129,12 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 });
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
-                    Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    }
+                    else {
+                        Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
+                    }
                 } else {
                     final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
                     Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -143,7 +149,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todaydesciptlayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
+                        /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Today");
                             mcontext.startActivity(intent);
@@ -152,6 +158,19 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             intent.putExtra("check","Tomorrow");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Upcoming");
+                            mcontext.startActivity(intent);
+                        }*/
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tomowindex+tomowcnt){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=upcmindex+upcmcnt){
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
@@ -193,7 +212,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todaydesciptlayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
+                        /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Today");
                             mcontext.startActivity(intent);
@@ -205,6 +224,19 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
+                        }*/
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=tomowindex) {
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tasks.size()){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=todayindex){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Upcoming");
+                            mcontext.startActivity(intent);
                         }
                     }
                 });
@@ -212,7 +244,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todayoverbtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
+                        /*if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","today");
                             mcontext.startActivity(intent);
@@ -223,6 +255,19 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<todayindex){
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","upcoming");
+                            mcontext.startActivity(intent);
+                        }*/
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=tomowindex) {
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tasks.size()){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=todayindex){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }
                     }
@@ -300,7 +345,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todayoverbtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
+                        /*if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","today");
                             mcontext.startActivity(intent);
@@ -314,6 +359,19 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","upcoming");
                             mcontext.startActivity(intent);
+                        }*/
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tomowindex+tomowcnt){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=upcmindex+upcmcnt){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","upcoming");
+                            mcontext.startActivity(intent);
                         }
                     }
                 });
@@ -321,7 +379,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.todaydesciptlayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
+                        /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Today");
                             mcontext.startActivity(intent);
@@ -330,6 +388,19 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             intent.putExtra("check","Tomorrow");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Upcoming");
+                            mcontext.startActivity(intent);
+                        }*/
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=tomowindex) {
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tasks.size()){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=todayindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
@@ -431,7 +502,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
-            } else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=(tasks.size())){
+            } else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tasks.size()){
                 if (tomowcnt>0) {
                     tomowcnt = tomowcnt - 1;
                 }

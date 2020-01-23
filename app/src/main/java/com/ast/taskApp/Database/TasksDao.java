@@ -20,7 +20,7 @@ public interface TasksDao {
     @Insert
     void addAllTasks(List<Tasks> tasks);
 
-    @Query("SELECT * FROM Tasks WHERE userID = :id ORDER BY startTime ASC")
+    @Query("SELECT * FROM Tasks WHERE userID = :id ORDER BY startTime DESC")
     List<Tasks> getAllTasks(String id);
 
     @Query("DELETE FROM Tasks WHERE taskID == :id")

@@ -238,11 +238,10 @@ public class Imageslider extends AppCompatActivity {
 
 
         sliderLayout.setCustomIndicator(indicator);
-        sliderLayout.stopAutoCycle();
         sliderLayout.addOnPageChangeListener(new ViewPagerEx.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
+                Toast.makeText(Imageslider.this,String.valueOf(position),Toast.LENGTH_SHORT);
             }
 
             @RequiresApi(api = Build.VERSION_CODES.N)

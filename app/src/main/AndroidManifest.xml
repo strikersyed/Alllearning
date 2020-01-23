@@ -29,7 +29,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
         <activity android:name="com.ast.taskApp.TodayOverview"
             android:screenOrientation="portrait">
@@ -45,7 +44,6 @@
             android:screenOrientation="portrait"/>
         <activity android:name="com.ast.taskApp.Activities.NewTaskActivity"
             android:screenOrientation="portrait">
-
 
         </activity>
         <activity android:name="com.ast.taskApp.SubscriptionView"
