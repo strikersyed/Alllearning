@@ -276,7 +276,12 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
-                    Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    }
+                    else {
+                        Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
+                    }
                 } else {
                     final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
                     Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -330,7 +335,12 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
-                    Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    }
+                    else {
+                        Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
+                    }
                 } else {
                     final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
                     Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {

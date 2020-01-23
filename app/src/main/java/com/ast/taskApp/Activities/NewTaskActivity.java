@@ -546,6 +546,43 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                             Toast.makeText(getApplicationContext(), exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
+        } else {
+            tasks.setName(taskName);
+            tasks.setLocation(taskPlace);
+            tasks.setStartTime(new Timestamp(startTime));
+            tasks.setStartDate(new Timestamp(startTime));
+            tasks.setEndTime(new Timestamp(endTime));
+            tasks.setEndDate(new Timestamp(endTime));
+            tasks.setTaskImageUrl(photourl);
+            tasks.setTag(taskTag);
+            tasks.setRepeatOn(repeatOn);
+            tasks.setPlatform(platform);
+            tasks.setTaskStatus(taskStatus);
+            tasks.setVibrateeonStart(isStart);
+            tasks.setVibrateonEnd(isEnd);
+            tasks.setTuneName(ringtone);
+            tasks.setTuneUrl(tuneUri.toString());
+            tasks.setWeekdays(daysList);
+            tasks.setUserID(userId);
+            tasks.setTaskID(taskid);
+            tasks.setFromSplash("1");
+            tasks.setAlaramID(alarmId);
+
+
+
+            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
+                    .setConstraints(constraints)
+                    .setInputData(data.build())
+                    .build();
+            workManager.enqueue(oneTimeWorkRequest);
+            /*TaskApp.getFirestore().collection("Tasks")
+                    .document(taskid)
+                    .set(tasks);*/
+            makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
+            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
+            setAlarmStartTime(startTimeInMillis);
+            setAlarmEndTime(endTimeInMillis);
+            TaskApp.getTaskRepo().insertTasks(tasks);
         }
 
     }
