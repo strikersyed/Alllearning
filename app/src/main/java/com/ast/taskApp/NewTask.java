@@ -811,7 +811,7 @@ public class NewTask extends AppCompatActivity implements View.OnClickListener {
                 tasks.setLocation(task_place.getText().toString());
             }
             tasks.setStartDate(startime);
-            data.putLong("starttime", startime.toDate().getTime());
+            data.putLong("endtime", startime.toDate().getTime());
             tasks.setEndDate(endtime);
             tasks.setStartTime(startime);
             tasks.setEndTime(endtime);
@@ -900,7 +900,7 @@ public class NewTask extends AppCompatActivity implements View.OnClickListener {
                                     tasks.setEndDate(endtime);
                                     tasks.setStartTime(startime);
                                     tasks.setEndTime(endtime);
-                                    data.putLong("starttime", startime.toDate().getTime());
+                                    data.putLong("endtime", startime.toDate().getTime());
                                     if (endtime == null) {
 
                                     } else {

@@ -3,6 +3,7 @@ package com.ast.taskApp.Adapters;
 import android.content.Context;
 import android.graphics.Outline;
 import android.icu.util.Calendar;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.view.LayoutInflater;
@@ -22,8 +23,10 @@ import com.bumptech.glide.Glide;
 import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.R;
 import com.ast.taskApp.TaskApp;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.StorageReference;
 import com.novoda.merlin.MerlinsBeard;
 
 import java.util.ArrayList;
@@ -38,6 +41,7 @@ public class TodayOverViewAdapter extends RecyclerView.Adapter<TodayOverViewAdap
     String check;
     FirebaseFirestore db;
     MerlinsBeard merlinsBeard;
+    private StorageReference mStorageRef;
 
 
 
@@ -250,7 +254,23 @@ public class TodayOverViewAdapter extends RecyclerView.Adapter<TodayOverViewAdap
 
 
                     //Glide.with(mContext).asBitmap().load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
-                    Glide.with(mContext).asBitmap().sizeMultiplier(0.9f).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
+                    if (tasks.get(position).getPlatform().equals("Android")) {
+                        if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                            Glide.with(mContext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                        }
+                        else {
+                            Glide.with(mContext).load(R.drawable.demo3).into(holder.todayimage);
+                        }
+                    } else {
+                        final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                String url = uri.toString();
+                                Glide.with(mContext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                            }
+                        });
+                    }
                     //Glide.with(mContext).asBitmap().sizeMultiplier(0.9f).load(R.drawable.demo8).into(holder.todayimage);
 
                     holder.todayimage.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -350,7 +370,23 @@ public class TodayOverViewAdapter extends RecyclerView.Adapter<TodayOverViewAdap
 
 
                     //Glide.with(mContext).asBitmap().load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
-                    Glide.with(mContext).asBitmap().sizeMultiplier(0.9f).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
+                    if (tasks.get(position).getPlatform().equals("Android")) {
+                        if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                            Glide.with(mContext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                        }
+                        else {
+                            Glide.with(mContext).load(R.drawable.demo3).into(holder.todayimage);
+                        }
+                    } else {
+                        final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
+                        Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                String url = uri.toString();
+                                Glide.with(mContext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                            }
+                        });
+                    }
                     //Glide.with(mContext).asBitmap().sizeMultiplier(0.9f).load(R.drawable.demo8).into(holder.todayimage);
 
                     holder.todayimage.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -398,7 +434,24 @@ public class TodayOverViewAdapter extends RecyclerView.Adapter<TodayOverViewAdap
                         tasks.get(position).getStartTime().toDate().getMinutes());
                 holder.timestatus.setText(hms);
 
-                Glide.with(mContext).asBitmap().sizeMultiplier(0.9f).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
+                if (tasks.get(position).getPlatform().equals("Android")) {
+                    if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                        Glide.with(mContext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                    }
+                    else {
+                        Glide.with(mContext).load(R.drawable.demo3).into(holder.todayimage);
+                    }
+                } else {
+                    final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            String url = uri.toString();
+                            Glide.with(mContext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                        }
+                    });
+                }
+
                 if (TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID())!=null) {
                     if (TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID()).getTaskStatus() != tasks.get(position).getTaskStatus()) {
                         Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID());

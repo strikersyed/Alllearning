@@ -4,7 +4,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Color;
-import android.icu.util.Calendar;
+import java.util.Calendar;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -21,15 +22,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
+import com.ast.taskApp.Adapters.ViewPagerAdapter;
 import com.bumptech.glide.request.RequestOptions;
 import com.ast.taskApp.Models.Tasks;
-import com.ast.taskApp.Models.Users;
 import com.glide.slider.library.SliderLayout;
 import com.glide.slider.library.indicators.PagerIndicator;
 import com.glide.slider.library.slidertypes.DefaultSliderView;
 import com.glide.slider.library.tricks.ViewPagerEx;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,6 +43,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.StorageReference;
 import com.novoda.merlin.MerlinsBeard;
 
 import java.text.SimpleDateFormat;
@@ -50,8 +56,8 @@ public class Imageslider extends AppCompatActivity {
 
 
     SliderLayout sliderLayout;
-    ImageButton cancelbtn,addtimebtn;
-    TextView heading,timerdescript,countdowntv;
+    ImageButton cancelbtn, addtimebtn;
+    TextView heading, timerdescript, countdowntv;
     PagerIndicator indicator;
     Window window;
     FirebaseFirestore db;
@@ -60,21 +66,24 @@ public class Imageslider extends AppCompatActivity {
     ArrayList<Tasks> taskss = new ArrayList<>();
     ArrayList<Tasks> selectedtasks = new ArrayList<>();
     HashMap<Integer, String> ads = new HashMap<Integer, String>();
-    Calendar start,end;
+    Calendar start, end;
     ProgressBar progressBar;
     CountDownTimer countDownTimer;
-    String TaskID,date;
-    Timestamp starttime;
+    String TaskID, date;
+    Timestamp endtime;
     SimpleDateFormat format;
     MerlinsBeard merlinsBeard;
     FirebaseAuth auth;
+    StorageReference mStorageRef;
+    ViewPager viewPager;
+    ViewPagerAdapter viewPagerAdapter;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         window = this.getWindow();
-            //    window.setBackgroundDrawableResource(R.drawable.splash_bg);
+        //    window.setBackgroundDrawableResource(R.drawable.splash_bg);
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
@@ -83,20 +92,12 @@ public class Imageslider extends AppCompatActivity {
 
         setContentView(R.layout.activity_imageslider);
 
+        viewPager = findViewById(R.id.viewpager_slide);
 
-        auth = FirebaseAuth.getInstance();
-        merlinsBeard = new MerlinsBeard.Builder().build(this);
-        progressBar = findViewById(R.id.progressbar);
-        countdowntv = findViewById(R.id.countdonwntxtv);
-        heading = findViewById(R.id.tv_heading);
-        timerdescript = findViewById(R.id.tv_description);
-        db = FirebaseFirestore.getInstance();
         taskDB = new TaskDB(this);
-        sliderLayout = findViewById(R.id.imageslider);
+        //sliderLayout = findViewById(R.id.imageslider);
         indicator = findViewById(R.id.indicator);
-        cancelbtn = findViewById(R.id.cancel);
-        addtimebtn = findViewById(R.id.addtime);
-        TaskID = "";
+        auth = FirebaseAuth.getInstance();
 
 
       /*  if (hasConnection()) {
@@ -136,117 +137,117 @@ public class Imageslider extends AppCompatActivity {
         }*/
         taskss = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(auth.getCurrentUser().getUid());
         taskorganizer();
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT,selectedtasks);
+        viewPager.setAdapter(viewPagerAdapter);
+
+        //viewPagerAdapter.notifyDataSetChanged();
+        //setData(sliderLayout.getCurrentPosition());
 
 
+        /*addtimebtn.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onClick(View v) {
 
-        
-      addtimebtn.setOnClickListener(new View.OnClickListener() {
-          @RequiresApi(api = Build.VERSION_CODES.N)
-          @Override
-          public void onClick(View v) {
+                //Toast.makeText(Imageslider.this, "Time has been added", Toast.LENGTH_SHORT).show();
+                if (selectedtasks.get(sliderLayout.getCurrentPosition()).getTaskStatus() != 3) {
+                    endtime = selectedtasks.get(sliderLayout.getCurrentPosition()).getEndTime();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(endtime.toDate().getTime());
+                    calendar.add(Calendar.MINUTE, 20);
+                    endtime = new Timestamp(calendar.getTime());
+                    //endtime.toDate().setMinutes((taskss.get(sliderLayout.getCurrentPosition()).getEndTime().toDate().getMinutes() + 20));
+                    db.collection("Tasks").document(TaskID).update("endTime", endtime).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Toast.makeText(Imageslider.this, "Time has been added", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
+                    tasks.setEndTime(endtime);
+                    TaskApp.getTaskRepo().updateTask(tasks);
+                    selectedtasks.get(sliderLayout.getCurrentPosition()).setEndTime(endtime);
 
-              //Toast.makeText(Imageslider.this, "Time has been added", Toast.LENGTH_SHORT).show();
-              if (selectedtasks.get(sliderLayout.getCurrentPosition()).getTaskStatus()!=3) {
-                  starttime = selectedtasks.get(sliderLayout.getCurrentPosition()).getEndTime();
-                  Calendar calendar = Calendar.getInstance();
-                  calendar.setTimeInMillis(starttime.toDate().getTime());
-                  calendar.add(Calendar.MINUTE, 20);
-                  starttime = new Timestamp(calendar.getTime());
-                  //starttime.toDate().setMinutes((taskss.get(sliderLayout.getCurrentPosition()).getEndTime().toDate().getMinutes() + 20));
-                  db.collection("Tasks").document(TaskID).update("endTime", starttime).addOnCompleteListener(new OnCompleteListener<Void>() {
-                      @Override
-                      public void onComplete(@NonNull Task<Void> task) {
-                          Toast.makeText(Imageslider.this, "Time has been added", Toast.LENGTH_SHORT).show();
-                      }
-                  });
-                  Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
-                  tasks.setEndTime(starttime);
-                  TaskApp.getTaskRepo().updateTask(tasks);
+                    AlarmManager alrmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                    Intent cancel = new Intent(Imageslider.this, AlarmReceiver.class);
+                    cancel.setAction("endtask");
+                    PendingIntent picancel = PendingIntent.getBroadcast(Imageslider.this,
+                            TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), cancel, PendingIntent.FLAG_CANCEL_CURRENT);
+                    alrmManager.cancel(picancel);
+                    picancel.cancel();
 
-                  AlarmManager alrmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-                  Intent cancel = new Intent(Imageslider.this, AlarmReceiver.class);
-                  cancel.setAction("endtask");
-                  PendingIntent picancel = PendingIntent.getBroadcast(Imageslider.this,
-                          TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), cancel, PendingIntent.FLAG_CANCEL_CURRENT);
-                  alrmManager.cancel(picancel);
-                  picancel.cancel();
-
-                  AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-                  Intent i = new Intent(Imageslider.this, AlarmReceiver.class);
-                  i.setAction("endtask");
-
-
-                  if (tasks.isVibrateeonStart()){
-                      i.putExtra("vibration",true);
-                      i.putExtra("ringcheck",false);
-                  } else {
-                      i.putExtra("vibration",false);
-                      if (tasks.getTuneName()=="" || tasks.getTuneName().isEmpty()){
-                          i.putExtra("ringcheck",false);
-                      } else {
-                          i.putExtra("ringcheck",true);
-                          i.putExtra("ringtone",tasks.getTuneUrl());
-                      }
-                  }
-                  i.putExtra("TaskID",TaskID);
-                  PendingIntent pi = PendingIntent.getBroadcast(Imageslider.this,
-                          TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), i, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                  if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus()==0){
-                      alarmManager.set(AlarmManager.RTC,calendar.getTimeInMillis(),pi);
-
-                  } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus()==1){
-                      alarmManager.setRepeating(AlarmManager.RTC,calendar.getTimeInMillis(),AlarmManager.INTERVAL_DAY,pi);
-
-                  }else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus()==2){
-                      alarmManager.setRepeating(AlarmManager.RTC,calendar.getTimeInMillis(), DateUtils.WEEK_IN_MILLIS,pi);
-
-                  }else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus()==3) {
-                      if (calendar.get(Calendar.MONTH) == Calendar.JANUARY || calendar.get(Calendar.MONTH) == Calendar.MARCH || calendar.get(Calendar.MONTH) == Calendar.MAY || calendar.get(Calendar.MONTH) == Calendar.JULY
-                              || calendar.get(Calendar.MONTH) == Calendar.AUGUST || calendar.get(Calendar.MONTH) == Calendar.OCTOBER || calendar.get(Calendar.MONTH) == Calendar.DECEMBER) {
-                          alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 31, pi);
-                      }
-                      if (calendar.get(Calendar.MONTH) == Calendar.APRIL || calendar.get(Calendar.MONTH) == Calendar.JUNE || calendar.get(Calendar.MONTH) == Calendar.SEPTEMBER
-                              || calendar.get(Calendar.MONTH) == Calendar.NOVEMBER) {
-                          alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 30, pi);
-                      }
-                      if (calendar.get(Calendar.MONTH) == Calendar.FEBRUARY) {
-                          alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 28, pi);
-                      }
-                  }
+                    AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                    Intent i = new Intent(Imageslider.this, AlarmReceiver.class);
+                    i.setAction("endtask");
 
 
+                    if (tasks.isVibrateeonStart()) {
+                        i.putExtra("vibration", true);
+                        i.putExtra("ringcheck", false);
+                    } else {
+                        i.putExtra("vibration", false);
+                        if (tasks.getTuneName() == "" || tasks.getTuneName().isEmpty()) {
+                            i.putExtra("ringcheck", false);
+                        } else {
+                            i.putExtra("ringcheck", true);
+                            i.putExtra("ringtone", tasks.getTuneUrl());
+                        }
+                    }
+                    i.putExtra("TaskID", TaskID);
+                    PendingIntent pi = PendingIntent.getBroadcast(Imageslider.this,
+                            TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), i, PendingIntent.FLAG_UPDATE_CURRENT);
 
-              }
+                    if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 0) {
+                        alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pi);
 
-          }
-      });
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 1) {
+                        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
-      cancelbtn.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-              Intent intent = new Intent(Imageslider.this,Home.class);
-              startActivity(intent);
-              finish();
-          }
-      });
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 2) {
+                        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), DateUtils.WEEK_IN_MILLIS, pi);
+
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 3) {
+                        if (calendar.get(Calendar.MONTH) == Calendar.JANUARY || calendar.get(Calendar.MONTH) == Calendar.MARCH || calendar.get(Calendar.MONTH) == Calendar.MAY || calendar.get(Calendar.MONTH) == Calendar.JULY
+                                || calendar.get(Calendar.MONTH) == Calendar.AUGUST || calendar.get(Calendar.MONTH) == Calendar.OCTOBER || calendar.get(Calendar.MONTH) == Calendar.DECEMBER) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 31, pi);
+                        }
+                        if (calendar.get(Calendar.MONTH) == Calendar.APRIL || calendar.get(Calendar.MONTH) == Calendar.JUNE || calendar.get(Calendar.MONTH) == Calendar.SEPTEMBER
+                                || calendar.get(Calendar.MONTH) == Calendar.NOVEMBER) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 30, pi);
+                        }
+                        if (calendar.get(Calendar.MONTH) == Calendar.FEBRUARY) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 28, pi);
+                        }
+                    }
 
 
+                }
+
+            }
+        });*/
+
+        /*cancelbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Imageslider.this, Home.class);
+                startActivity(intent);
+                finish();
+            }
+        });*/
 
 
-
-
-
-        sliderLayout.setCustomIndicator(indicator);
+        /*sliderLayout.setCustomIndicator(indicator);
+        sliderLayout.stopAutoCycle();
         sliderLayout.addOnPageChangeListener(new ViewPagerEx.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                Toast.makeText(Imageslider.this,String.valueOf(position),Toast.LENGTH_SHORT);
+                Toast.makeText(Imageslider.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
             }
 
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onPageSelected(int position) {
+                //setData(position);
                 heading.setText(selectedtasks.get(position).getName());
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy hh:mm");
                 //format = new SimpleDateFormat("MMM dd,yyyy hh:mm a");
@@ -266,8 +267,8 @@ public class Imageslider extends AppCompatActivity {
                 //int factor = (int) (100 / total_milli);
                 Calendar forCounter = Calendar.getInstance();
                 forCounter.setTimeInMillis(end.getTimeInMillis() - new Date().getTime());
-                starttime = selectedtasks.get(position).getStartTime();
-                if (selectedtasks.get(position).getTaskStatus()!=3) {
+                endtime = selectedtasks.get(position).getStartTime();
+                if (selectedtasks.get(position).getTaskStatus() != 3) {
                     if (forCounter.getTimeInMillis() > 0) {
                         if (selectedtasks.get(position).getStartTime().toDate().before(Timestamp.now().toDate()) || selectedtasks.get(position).getStartTime().toDate() == Timestamp.now().toDate()) {
                             if (countDownTimer != null) {
@@ -281,44 +282,43 @@ public class Imageslider extends AppCompatActivity {
                             progressBar.setProgress(50);
                             format = new SimpleDateFormat("hh:mm");
                             String count = format.format(selectedtasks.get(position).getStartTime().toDate());
-                    /*String hms = String.format("%02d : %02d",
+                    *//*String hms = String.format("%02d : %02d",
                             taskss.get(position).getStartTime().toDate().getHours(),
-                            taskss.get(position).getStartTime().toDate().getMinutes());*/
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
                             countdowntv.setText(count);
                         }
-                    }
-                    else {
-                        progressBar.setProgress(50);
-                        format = new SimpleDateFormat("hh:mm");
-                        String count = format.format(selectedtasks.get(position).getStartTime().toDate());
-                    /*String hms = String.format("%02d : %02d",
-                            taskss.get(position).getStartTime().toDate().getHours(),
-                            taskss.get(position).getStartTime().toDate().getMinutes());*/
-                        countdowntv.setText(count);
-                        db.collection("Tasks").document(TaskID).update("taskStatus",3);
-                        Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(auth.getCurrentUser().getUid());
-                        if (tasks!=null){
-                            tasks.setTaskStatus(3);
-                            TaskApp.getTaskRepo().updateTask(tasks);
-                        }
-                    }
                     } else {
                         progressBar.setProgress(50);
                         format = new SimpleDateFormat("hh:mm");
                         String count = format.format(selectedtasks.get(position).getStartTime().toDate());
-                    /*String hms = String.format("%02d : %02d",
+                    *//*String hms = String.format("%02d : %02d",
                             taskss.get(position).getStartTime().toDate().getHours(),
-                            taskss.get(position).getStartTime().toDate().getMinutes());*/
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
                         countdowntv.setText(count);
+                        db.collection("Tasks").document(TaskID).update("taskStatus", 3);
+                        Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(auth.getCurrentUser().getUid());
+                        if (tasks != null) {
+                            tasks.setTaskStatus(3);
+                            TaskApp.getTaskRepo().updateTask(tasks);
+                        }
                     }
-
+                } else {
+                    progressBar.setProgress(50);
+                    format = new SimpleDateFormat("hh:mm");
+                    String count = format.format(selectedtasks.get(position).getStartTime().toDate());
+                    *//*String hms = String.format("%02d : %02d",
+                            taskss.get(position).getStartTime().toDate().getHours(),
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
+                    countdowntv.setText(count);
+                }
 
             }
+
             @Override
             public void onPageScrollStateChanged(int state) {
 
             }
-        });
+        });*/
 
 
 
@@ -355,25 +355,25 @@ public class Imageslider extends AppCompatActivity {
                 }
             });*/
 
-        }
+    }
 
-        public void getFirestoreData(){
-            db.collection("Tasks").whereEqualTo("userID",auth.getCurrentUser().getUid())
-                    .orderBy("startTime", Query.Direction.ASCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                    taskss = (ArrayList<Tasks>) queryDocumentSnapshots.toObjects(Tasks.class);
-                    taskorganizer();
-                }
-            });
-        }
-        
-        
+    public void getFirestoreData() {
+        db.collection("Tasks").whereEqualTo("userID", auth.getCurrentUser().getUid())
+                .orderBy("startTime", Query.Direction.ASCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                taskss = (ArrayList<Tasks>) queryDocumentSnapshots.toObjects(Tasks.class);
+                taskorganizer();
+            }
+        });
+    }
 
-    public void taskorganizer(){
+
+    public void taskorganizer() {
         selectedtasks.clear();
+        ads.clear();
         for (int i = 0; i < taskss.size(); i++) {
-            if (taskss.get(i).getTaskStatus()!=4) {
+            if (taskss.get(i).getTaskStatus() != 4) {
                 if (getIntent().getExtras().get("check").equals("Upcoming")) {
                     if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime() - taskss.get(i).getStartTime().toDate().getTime())) <= 12) {
                         selectedtasks.add(taskss.get(i));
@@ -395,8 +395,26 @@ public class Imageslider extends AppCompatActivity {
             }
 
         }
-        for (int j = 0 ;j <selectedtasks.size();j++){
-            ads.put(j, selectedtasks.get(j).getTaskImageUrl());
+       /* for (int j = 0; j < selectedtasks.size(); j++) {
+            ads.put(j, "");
+           *//* if (selectedtasks.get(j).getPlatform().equals("Android")) {
+                if (!(selectedtasks.get(j).getTaskImageUrl() == null)) {
+                    ads.put(j, selectedtasks.get(j).getTaskImageUrl());
+                } else {
+                    ads.put(j, getResources().getDrawable(R.drawable.demo11).toString());
+                }
+            } else {
+                final StorageReference Ref = mStorageRef.child("Tasks").child(selectedtasks.get(j).getTaskID()).child("Attachment").child("mountains.jpg");
+                int l = j;
+                Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        String url = uri.toString();
+                        ads.put(l, url);
+                    }
+                });
+            }*//*
+
         }
         for (Integer name : ads.keySet()) {
 
@@ -407,17 +425,18 @@ public class Imageslider extends AppCompatActivity {
                     .image(ads.get(name))
                     .setRequestOption(RequestOptions.centerCropTransform());
             sliderLayout.addSlider(defaultSliderView);
-        }
+        }*/
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(Imageslider.this,Home.class);
+        Intent intent = new Intent(Imageslider.this, Home.class);
         startActivity(intent);
         finish();
     }
-    void counterRun(long tofinish ,long totalTime,int position){
+
+    /*void counterRun(long tofinish, long totalTime, int position) {
         countDownTimer = new CountDownTimer(tofinish, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -430,7 +449,7 @@ public class Imageslider extends AppCompatActivity {
                 String hms = String.format("%02d : %02d : %02d",
                         TimeUnit.MILLISECONDS.toHours(millisUntilFinished),
                         (TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millisUntilFinished)))
-                ,TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)));
+                        , TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)));
                 countdowntv.setText(hms);
                 //holder.timestatus.setText(TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millisUntilFinished)) + ":"
                 //        + (TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished))));
@@ -440,11 +459,77 @@ public class Imageslider extends AppCompatActivity {
             public void onFinish() {
                 db.collection("tasks").document(selectedtasks.get(position).getTaskID()).update("taskStatus", 3);
                 Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
-                if (tasks!=null){
+                if (tasks != null) {
                     tasks.setTaskStatus(3);
                     TaskApp.getTaskRepo().updateTask(tasks);
                 }
             }
         }.start();
-    }
+    }*/
+
+   /* public void setData(int position) {
+        heading.setText(selectedtasks.get(position).getName());
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+        //format = new SimpleDateFormat("MMM dd,yyyy hh:mm a");
+
+        date = format.format(selectedtasks.get(position).getStartDate().toDate());
+        timerdescript.setText(date);
+        TaskID = selectedtasks.get(position).getTaskID();
+        start = Calendar.getInstance();
+        end = Calendar.getInstance();
+        start.setTimeInMillis(selectedtasks.get(position).getStartTime().toDate().getTime());
+        end.setTimeInMillis(selectedtasks.get(position).getEndTime().toDate().getTime());
+
+        long start_milli = start.getTimeInMillis();
+        long end_milli = end.getTimeInMillis();
+        //double total_milli = (end_milli - start_milli);
+        long total_milli = (end_milli - start_milli);
+        //int factor = (int) (100 / total_milli);
+        Calendar forCounter = Calendar.getInstance();
+        forCounter.setTimeInMillis(end.getTimeInMillis() - new Date().getTime());
+        endtime = selectedtasks.get(position).getStartTime();
+        if (selectedtasks.get(position).getTaskStatus() != 3) {
+            if (forCounter.getTimeInMillis() > 0) {
+                if (selectedtasks.get(position).getStartTime().toDate().before(Timestamp.now().toDate()) || selectedtasks.get(position).getStartTime().toDate() == Timestamp.now().toDate()) {
+                    if (countDownTimer != null) {
+                        countDownTimer.cancel();
+                        counterRun(forCounter.getTimeInMillis(), total_milli, position);
+
+                    } else {
+                        counterRun(forCounter.getTimeInMillis(), total_milli, position);
+                    }
+                } else {
+                    progressBar.setProgress(50);
+                    format = new SimpleDateFormat("hh:mm");
+                    String count = format.format(selectedtasks.get(position).getStartTime().toDate());
+                    *//*String hms = String.format("%02d : %02d",
+                            taskss.get(position).getStartTime().toDate().getHours(),
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
+                    countdowntv.setText(count);
+                }
+            } else {
+                progressBar.setProgress(50);
+                format = new SimpleDateFormat("hh:mm");
+                String count = format.format(selectedtasks.get(position).getStartTime().toDate());
+                    *//*String hms = String.format("%02d : %02d",
+                            taskss.get(position).getStartTime().toDate().getHours(),
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
+                countdowntv.setText(count);
+                db.collection("Tasks").document(TaskID).update("taskStatus", 3);
+                Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(auth.getCurrentUser().getUid());
+                if (tasks != null) {
+                    tasks.setTaskStatus(3);
+                    TaskApp.getTaskRepo().updateTask(tasks);
+                }
+            }
+        } else {
+            progressBar.setProgress(50);
+            format = new SimpleDateFormat("hh:mm");
+            String count = format.format(selectedtasks.get(position).getStartTime().toDate());
+                    *//*String hms = String.format("%02d : %02d",
+                            taskss.get(position).getStartTime().toDate().getHours(),
+                            taskss.get(position).getStartTime().toDate().getMinutes());*//*
+            countdowntv.setText(count);
+        }
+    }*/
 }

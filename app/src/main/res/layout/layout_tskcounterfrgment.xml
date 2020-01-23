@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".Imageslider"
+    android:background="@android:color/transparent"
+    >
+
+    <Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:elevation="3dp"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <ImageButton
+                android:id="@+id/cancel"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:src="@mipmap/cross"
+                android:background="?attr/selectableItemBackground"
+                />
+
+            <ImageButton
+                android:id="@+id/addtime"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:src="@mipmap/add_time"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="15dp"
+                android:background="?attr/selectableItemBackground"
+                />
+
+
+
+        </RelativeLayout>
+
+    </Toolbar>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/tskbackimage"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#A6000000"/>
+
+
+
+
+
+
+
+    <ProgressBar
+        android:id="@+id/progressbar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:progress="50"
+        android:max="100"
+        android:rotation="-90"
+        android:layout_centerInParent="true"
+        android:progressDrawable="@drawable/circle_blue"
+        android:background="@drawable/circle_lightblue"/>
+    <TextView
+        android:id="@+id/countdonwntxtv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textColor="#ffffff"
+        android:text="24:59"
+        android:textSize="30sp"/>
+
+    <LinearLayout
+        android:layout_alignParentBottom="true"
+        android:id="@+id/textlayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="25dp"
+        android:orientation="vertical">
+
+
+        <TextView
+            android:id="@+id/tv_heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="Shopping for Home Decor"
+            android:textColor="#fff"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_heading"
+            android:layout_marginBottom="5dp"
+            android:text="12-18-19 2:31 PM"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+
+
+
+
+
+    </LinearLayout>
+
+
+
+
+
+
+</RelativeLayout>
