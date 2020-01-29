@@ -13,26 +13,28 @@ public class Users implements Serializable {
     @PrimaryKey @NonNull
     private String userID;
     private String email;
-    private String firstname;
-    private String fullname;
+    private String firstName;
+    private String fullName;
     private String platform;
-    private String profilepic;
+    private String profilePicture;
     private Integer subscriptionType;
     private Integer isLoggedin;
 
 
-    public Users(@NonNull String userID, String email, String firstname,
-                 String fullname, String platform, String profilepic,
+    public Users(@NonNull String userID, String email,
+                 String firstName, String fullName,
+                 String platform, String profilePicture,
                  Integer subscriptionType, Integer isLoggedin) {
         this.userID = userID;
         this.email = email;
-        this.firstname = firstname;
-        this.fullname = fullname;
+        this.firstName = firstName;
+        this.fullName = fullName;
         this.platform = platform;
-        this.profilepic = profilepic;
+        this.profilePicture = profilePicture;
         this.subscriptionType = subscriptionType;
         this.isLoggedin = isLoggedin;
     }
+
     @Ignore
     public Users() {}
 
@@ -53,20 +55,20 @@ public class Users implements Serializable {
         this.email = email;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getFullname() {
-        return fullname;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getPlatform() {
@@ -77,12 +79,12 @@ public class Users implements Serializable {
         this.platform = platform;
     }
 
-    public String getProfilepic() {
-        return profilepic;
+    public String getProfilePicture() {
+        return profilePicture;
     }
 
-    public void setProfilepic(String profilepic) {
-        this.profilepic = profilepic;
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 
     public Integer getSubscriptionType() {

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.ast.taskApp.Models.Tasks;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -38,7 +39,7 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
     ArrayList<Tasks> tasks = new ArrayList<>();
     TaskDB taskDB;
     Calendar startTime,endTime;
-    List<WeekViewEvent> events = new ArrayList<>();
+    List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +64,7 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
         mWeekView.setOnEventClickListener(this);
         mWeekView.setScrollListener(this);
 
-        db.collection("Tasks").whereEqualTo("userID", taskDB.getString("userID")).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+        /*db.collection("Tasks").whereEqualTo("userID", taskDB.getString("userID")).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 for (DocumentSnapshot queryDocumentSnapshot : queryDocumentSnapshots.getDocuments()){
@@ -83,7 +84,25 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
                 }
 
             }
-        });
+        });*/
+
+        WeekViewEvent event = new WeekViewEvent();
+        tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(TaskApp.getAuth().getCurrentUser().getUid());
+
+        if (tasks.size()>0) {
+
+            for (int i = 0; i < tasks.size(); i++) {
+                startTime = Calendar.getInstance();
+                endTime = Calendar.getInstance();
+                startTime.setTimeInMillis(tasks.get(i).getStartTime().toDate().getTime());
+                endTime.setTimeInMillis(tasks.get(i).getEndTime().toDate().getTime());
+                event = new WeekViewEvent(i, tasks.get(i).getName(), startTime, endTime);
+                event.setColor(getResources().getColor(R.color.blue));
+                events.add(event);
+            }
+        }
+
+
 
         if(Timestamp.now().toDate().getMonth()==0){
             month.setText("Jan");
@@ -161,7 +180,11 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
 
     @Override
     public List<WeekViewEvent> onMonthChange(int newYear, int newMonth) {
-        List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
+
+
+
+
+       /* List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
         Calendar startTime = Calendar.getInstance();
         Calendar endTime = Calendar.getInstance();
 
@@ -179,13 +202,12 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
             startTime.set(Calendar.MINUTE, 0);
             startTime.set(Calendar.MONTH, newMonth - 1);
             startTime.set(Calendar.YEAR, newYear);
-            ;
             endTime.add(Calendar.HOUR, 1);
             endTime.set(Calendar.MONTH, newMonth - 1);
             WeekViewEvent event = new WeekViewEvent(1, "This is a Event!!", startTime, endTime);
             event.setColor(getResources().getColor(R.color.blue));
             events.add(event);
-        }
+        }*/
 
 
 
@@ -254,6 +276,14 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
         }
 
 
+    }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        Intent intent = new Intent(CalenderView.this,Home.class);
+        startActivity(intent);
+        finish();
     }
 }

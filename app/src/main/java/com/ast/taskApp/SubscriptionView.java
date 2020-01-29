@@ -1,5 +1,6 @@
 package com.ast.taskApp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -11,6 +12,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -18,10 +20,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
+import com.ast.taskApp.Utils.PreferenceUtils;
 import com.bumptech.glide.Glide;
 import com.ast.taskApp.Activities.NewTaskActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -48,6 +50,7 @@ public class SubscriptionView extends AppCompatActivity {
     String personName,personEmail;
     Uri personPhoto;
     CircleImageView circularImageView;
+    Context context;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -63,6 +66,7 @@ public class SubscriptionView extends AppCompatActivity {
         window.setStatusBarColor(getResources().getColor(R.color.blue));
 
         setContentView(R.layout.activity_subscription_view);
+        context = this;
         toolbar = findViewById(R.id.toolbar);
         taskDB = new TaskDB(this);
         cancel = findViewById(R.id.cancel);
@@ -84,7 +88,7 @@ public class SubscriptionView extends AppCompatActivity {
                         .withMenuOpened(false)
                         .withMenuLayout(R.layout.slide_menulayout)
                         .inject();
-                getGoogleData();
+                getLocalData();
                 InitializeViews();
                 toolbar.setNavigationIcon(R.mipmap.menu_white);
                 Glide.with(this).asBitmap().load(personPhoto).into(circularImageView);
@@ -154,14 +158,28 @@ public class SubscriptionView extends AppCompatActivity {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TaskApp.getAuth().signOut();
-                googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Intent intent = new Intent(SubscriptionView.this,Login.class);
-                        startActivity(intent);
-                    }
-                });
+                TaskApp.getFirestore().collection("Users")
+                        .document(TaskApp.getAuth().getCurrentUser().getUid()).update("isLoggedin",0)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    TaskApp.getAuth().signOut();
+                                    googleSignInClient.signOut();
+                                    PreferenceUtils.clearMemory(context);
+                                    if (PreferenceUtils.clearMemory(context)) {
+                                        Intent intent1 = new Intent(context, Login.class);
+                                        intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent1);
+                                    }
+                                }
+                                else {
+
+                                    Toast.makeText(context, "Unable to logout!", Toast.LENGTH_SHORT).show();
+                                }
+
+                            }
+                        });
             }
         });
 
@@ -185,14 +203,14 @@ public class SubscriptionView extends AppCompatActivity {
         });
     }
 
-    private void getGoogleData() {
+    private void getLocalData() {
         GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder()
                 .requestEmail()
                 .build();
 
 
         googleSignInClient = GoogleSignIn.getClient(this,googleSignInOptions);
-        final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        /*final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
             personName = acct.getDisplayName();
             //String personGivenName = acct.getGivenName();
@@ -200,7 +218,10 @@ public class SubscriptionView extends AppCompatActivity {
             personEmail = acct.getEmail();
             //String personId = acct.getId();
             personPhoto = acct.getPhotoUrl();
-        }
+        }*/
+        personName = PreferenceUtils.getName(this);
+        personEmail = PreferenceUtils.getEmail(this);
+        personPhoto = Uri.parse(PreferenceUtils.getImage(this));
     }
 
     private void InitializeViews() {

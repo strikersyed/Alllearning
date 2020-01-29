@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/headertoday"
+        android:orientation="horizontal"
+        android:paddingBottom="10dp"
+
+        >
+        <TextView
+            android:id="@+id/textviewtoday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today"
+            android:fontFamily="@font/sf_ui_display_medium"
+            android:textSize="20sp"
+            android:textColor="#000"
+            />
+
+        <ImageView
+            android:id="@+id/todayoverviewbtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/overview"
+            android:layout_alignParentRight="true"
+            android:paddingRight="10dp"
+            android:paddingTop="10dp"
+            android:paddingLeft="10dp"
+            />
+    </RelativeLayout>
+
+</LinearLayout>

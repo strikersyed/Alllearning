@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.CountDownTimer;
 
 import androidx.core.app.NotificationManagerCompat;
+import androidx.work.Data;
 
 import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.Utils.NotificationUtils;
@@ -20,7 +21,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     Uri alarmtone;
     public static String TaskID, taskName, ringtone ;
     public static boolean vibration, ringcheck;
-
+    Data.Builder data;
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -31,6 +32,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         ringtone = intent.getExtras().getString("ringtone");
         vibration = intent.getExtras().getBoolean("vibration");
         ringcheck = intent.getExtras().getBoolean("ringcheck");
+        data = new Data.Builder();
 
         final NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
         Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
@@ -68,14 +70,16 @@ public class AlarmReceiver extends BroadcastReceiver {
                 if (tasks.isVibrateeonStart()){
                     vibration = true;
                     NotificationUtils.makeStatusNotification(false, "Task is Starting", "Your Task is about to start", context);
-                    TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",1);
 
                 }
                 else {
                     vibration = false;
                     NotificationUtils.makeStatusNotification(false, "Task is Starting", "Your Task is about to start", context);
-                    TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",1);
+
                 }
+                data.putString("TaskID",TaskID);
+                data.putInt("status",1);
+                TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
                 //Tasks tasks1 = TaskApp.getTaskRepo().getTaskbyId(TaskID);
                 tasks.setTaskStatus(1);
                 TaskApp.getTaskRepo().updateTask(tasks);
@@ -85,14 +89,15 @@ public class AlarmReceiver extends BroadcastReceiver {
                 if (tasks.isVibrateonEnd()){
                     vibration = true;
                     NotificationUtils.makeStatusNotification(false, "Task is Ending", "Your Task is about to End", context);
-                    TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",3);
                 }
                 else {
                     vibration = false;
                     NotificationUtils.makeStatusNotification(false, "Task is Ending", "Your Task is about to End", context);
-                    TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",3);
                 }
                 //Tasks tasks2 = TaskApp.getTaskRepo().getTaskbyId(TaskID);
+                data.putString("TaskID",TaskID);
+                data.putInt("status",3);
+                TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
                 tasks.setTaskStatus(3);
                 TaskApp.getTaskRepo().updateTask(tasks);
             }
@@ -104,7 +109,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             Intent intent1 = new Intent(context,Login.class);
             notificationManagerCompat.cancel(2);
             context.startActivity(intent1);
-            TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",1);
+            data.putString("TaskID",TaskID);
+            data.putInt("status",1);
+            TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
             Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(TaskID);
             taskss.setTaskStatus(1);
             TaskApp.getTaskRepo().updateTask(taskss);
@@ -113,13 +120,15 @@ public class AlarmReceiver extends BroadcastReceiver {
             Intent intent1 = new Intent(context,Login.class);
             notificationManagerCompat.cancel(2);
             context.startActivity(intent1);
-            TaskApp.getFirestore().collection("Tasks").document(TaskID).update("taskStatus",4);
+            data.putString("TaskID",TaskID);
+            data.putInt("status",4);
+            TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
             Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(TaskID);
             taskss.setTaskStatus(4);
             TaskApp.getTaskRepo().updateTask(taskss);
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             Intent start = new Intent(context, AlarmReceiver.class);
-            start.setAction("endtask");
+            start.setAction("endTask");
             PendingIntent pistart = PendingIntent.getBroadcast(context,
                     TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), start, PendingIntent.FLAG_CANCEL_CURRENT);
 
@@ -128,7 +137,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
             AlarmManager alrmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             Intent end = new Intent(context, AlarmReceiver.class);
-            end.setAction("starttask");
+            end.setAction("startTask");
             PendingIntent piend = PendingIntent.getBroadcast(context,
                     TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), end, PendingIntent.FLAG_CANCEL_CURRENT);
 

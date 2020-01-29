@@ -375,21 +375,26 @@ public class Imageslider extends AppCompatActivity {
         for (int i = 0; i < taskss.size(); i++) {
             if (taskss.get(i).getTaskStatus() != 4) {
                 if (getIntent().getExtras().get("check").equals("Upcoming")) {
-                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime() - taskss.get(i).getStartTime().toDate().getTime())) <= 12) {
+                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
                         selectedtasks.add(taskss.get(i));
                         //ads.put(i, selectedtasks.get(i).getTaskImageUrl());
 
                     }
                 } else if (getIntent().getExtras().get("check").equals("Today")) {
-                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime() - taskss.get(i).getStartTime().toDate().getTime())) > 12
-                            && Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime() - taskss.get(i).getStartTime().toDate().getTime())) < 24) {
+                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
+                            && Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
                         selectedtasks.add(taskss.get(i));
                         // ads.put(i, selectedtasks.get(i).getTaskImageUrl());
                     }
                 } else if (getIntent().getExtras().get("check").equals("Tomorrow")) {
-                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime() - taskss.get(i).getStartTime().toDate().getTime())) >= 24) {
+                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
+                            && Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ) {
                         selectedtasks.add(taskss.get(i));
                         //ads.put(i, selectedtasks.get(i).getTaskImageUrl());
+                    }
+                } else if (getIntent().getExtras().get("check").equals("Late")){
+                    if (Math.abs(TimeUnit.MILLISECONDS.toHours(taskss.get(i).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) > 48){
+                        selectedtasks.add(taskss.get(i));
                     }
                 }
             }

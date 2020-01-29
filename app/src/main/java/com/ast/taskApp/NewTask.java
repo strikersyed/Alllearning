@@ -206,7 +206,7 @@ public class NewTask extends AppCompatActivity implements View.OnClickListener {
         db = FirebaseFirestore.getInstance();
         googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
         googleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
-        imageupload = findViewById(R.id.imageupld);
+        //imageupload = findViewById(R.id.imageupld);
         newtag = findViewById(R.id.tasktag);
         task_name = findViewById(R.id.task_name);
         task_place = findViewById(R.id.task_place);
@@ -1227,7 +1227,7 @@ public class NewTask extends AppCompatActivity implements View.OnClickListener {
 
 
         myIntent.putExtra("name", task_name.getText().toString());
-        myIntent.setAction("endtask");
+        myIntent.setAction("endTask");
 
         if (repeaton == 0) {
             /*if (mon.isChecked()) {

@@ -11,7 +11,7 @@ import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.Models.Users;
 
 
-@Database(entities ={Users.class, Tasks.class},version = 2,exportSchema = false)
+@Database(entities ={Users.class, Tasks.class},version = 3,exportSchema = false)
 @TypeConverters({ConverterRoom.class})
 public abstract class TaskappDatabase extends RoomDatabase {
     //public static final int DATABASE_VERSION = 4;

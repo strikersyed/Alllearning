@@ -48,6 +48,7 @@ public class SplashActivity extends AppCompatActivity {
 
                     Intent intent = new Intent(SplashActivity.this,Login.class);
                     startActivity(intent);
+                    finish();
 
 
                 }
@@ -61,7 +62,7 @@ public class SplashActivity extends AppCompatActivity {
 
                     Intent intent = new Intent(SplashActivity.this,Home.class);
                     startActivity(intent);
-
+                    finish();
 
                 }
             }, SPLASH_DISPLAY_LENGTH);

@@ -19,18 +19,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.work.Data;
 
 import com.ast.taskApp.AlarmReceiver;
 import com.ast.taskApp.Home;
-import com.ast.taskApp.Imageslider;
 import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.R;
 import com.ast.taskApp.TaskApp;
 import com.ast.taskApp.TaskDB;
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -128,7 +126,7 @@ public class TaskCounterFragment extends Fragment implements View.OnClickListene
         Calendar forCounter = Calendar.getInstance();
         forCounter.setTimeInMillis(end.getTimeInMillis() - new Date().getTime());
         endtime = tasks[0].getStartTime();
-        if (tasks[0].getTaskStatus() != 3) {
+        if (tasks[0].getTaskStatus() != 3 && tasks[0].getTaskStatus()!=2) {
             if (forCounter.getTimeInMillis() > 0) {
                 if (tasks[0].getStartTime().toDate().before(Timestamp.now().toDate()) || tasks[0].getStartTime().toDate() == Timestamp.now().toDate()) {
                     if (countDownTimer != null) {
@@ -203,7 +201,11 @@ public class TaskCounterFragment extends Fragment implements View.OnClickListene
 
             @Override
             public void onFinish() {
-                db.collection("tasks").document(tasks[0].getTaskID()).update("taskStatus", 3);
+                Data.Builder builder = new Data.Builder();
+                builder.putString("TaskID",TaskID);
+                builder.putInt("status",3);
+                TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(builder.build()));
+                //db.collection("tasks").document(tasks[0].getTaskID()).update("taskStatus", 3);
                 Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
                 if (tasks != null) {
                     tasks.setTaskStatus(3);
@@ -218,74 +220,77 @@ public class TaskCounterFragment extends Fragment implements View.OnClickListene
         switch (v.getId()){
             case R.id.addtime:
             {
-                endtime = tasks[0].getEndTime();
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(endtime.toDate().getTime());
-                calendar.add(Calendar.MINUTE, 20);
-                endtime = new Timestamp(calendar.getTime());
-                //endtime.toDate().setMinutes((taskss.get(sliderLayout.getCurrentPosition()).getEndTime().toDate().getMinutes() + 20));
-                db.collection("Tasks").document(TaskID).update("endTime", endtime).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(getContext(), "Time has been added", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
-                tasks.setEndTime(endtime);
-                TaskApp.getTaskRepo().updateTask(tasks);
-                //tasks[0].setEndTime(endtime);
+                if (tasks[0].getTaskStatus()!=3) {
+                    Toast.makeText(getContext(),"20 minutes have been added",Toast.LENGTH_SHORT).show();
+                    endtime = tasks[0].getEndTime();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(endtime.toDate().getTime());
+                    calendar.add(Calendar.MINUTE, 20);
+                    endtime = new Timestamp(calendar.getTime());
+                    //endtime.toDate().setMinutes((taskss.get(sliderLayout.getCurrentPosition()).getEndTime().toDate().getMinutes() + 20));
+                    Data.Builder data = new Data.Builder();
+                    data.putString("TaskID",TaskID);
+                    data.putLong("endtime",calendar.getTimeInMillis());
+                    TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
+                    Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(TaskID);
+                    taskss.setEndTime(endtime);
+                    TaskApp.getTaskRepo().updateTask(taskss);
+                    tasks[0].setEndTime(endtime);
 
-                AlarmManager alrmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
-                Intent cancel = new Intent(getContext(), AlarmReceiver.class);
-                cancel.setAction("endtask");
-                PendingIntent picancel = PendingIntent.getBroadcast(getContext(),
-                        TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), cancel, PendingIntent.FLAG_CANCEL_CURRENT);
-                alrmManager.cancel(picancel);
-                picancel.cancel();
+                    AlarmManager alrmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
+                    Intent cancel = new Intent(getContext(), AlarmReceiver.class);
+                    cancel.setAction("endTask");
+                    PendingIntent picancel = PendingIntent.getBroadcast(getContext(),
+                            TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), cancel, PendingIntent.FLAG_CANCEL_CURRENT);
+                    alrmManager.cancel(picancel);
+                    picancel.cancel();
 
-                AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
-                Intent i = new Intent(getContext(), AlarmReceiver.class);
-                i.setAction("endtask");
+                    AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(ALARM_SERVICE);
+                    Intent i = new Intent(getContext(), AlarmReceiver.class);
+                    i.setAction("endTask");
+                    i.putExtra("taskID", TaskID);
 
-
-                if (tasks.isVibrateeonStart()) {
-                    i.putExtra("vibration", true);
-                    i.putExtra("ringcheck", false);
-                } else {
-                    i.putExtra("vibration", false);
-                    if (tasks.getTuneName() == "" || tasks.getTuneName().isEmpty()) {
+                    if (tasks[0].isVibrateeonStart()) {
+                        i.putExtra("vibration", true);
                         i.putExtra("ringcheck", false);
                     } else {
-                        i.putExtra("ringcheck", true);
-                        i.putExtra("ringtone", tasks.getTuneUrl());
+                        i.putExtra("vibration", false);
+                        if (tasks[0].getTuneName() == "" || tasks[0].getTuneName().isEmpty()) {
+                            i.putExtra("ringcheck", false);
+                        } else {
+                            i.putExtra("ringcheck", true);
+                            i.putExtra("ringtone", tasks[0].getTuneUrl());
+                        }
                     }
+
+                    PendingIntent pi = PendingIntent.getBroadcast(getContext(),
+                            TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), i, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getRepeatOn() == 0) {
+                        alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pi);
+
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getRepeatOn() == 1) {
+                        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getRepeatOn() == 2) {
+                        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), DateUtils.WEEK_IN_MILLIS, pi);
+
+                    } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getRepeatOn() == 3) {
+                        if (calendar.get(Calendar.MONTH) == Calendar.JANUARY || calendar.get(Calendar.MONTH) == Calendar.MARCH || calendar.get(Calendar.MONTH) == Calendar.MAY || calendar.get(Calendar.MONTH) == Calendar.JULY
+                                || calendar.get(Calendar.MONTH) == Calendar.AUGUST || calendar.get(Calendar.MONTH) == Calendar.OCTOBER || calendar.get(Calendar.MONTH) == Calendar.DECEMBER) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 31, pi);
+                        }
+                        if (calendar.get(Calendar.MONTH) == Calendar.APRIL || calendar.get(Calendar.MONTH) == Calendar.JUNE || calendar.get(Calendar.MONTH) == Calendar.SEPTEMBER
+                                || calendar.get(Calendar.MONTH) == Calendar.NOVEMBER) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 30, pi);
+                        }
+                        if (calendar.get(Calendar.MONTH) == Calendar.FEBRUARY) {
+                            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 28, pi);
+                        }
+                    }
+                    break;
                 }
-                i.putExtra("TaskID", TaskID);
-                PendingIntent pi = PendingIntent.getBroadcast(getContext(),
-                        TaskApp.getTaskRepo().getTaskbyId(TaskID).getAlaramID(), i, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 0) {
-                    alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pi);
-
-                } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 1) {
-                    alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
-                } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 2) {
-                    alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), DateUtils.WEEK_IN_MILLIS, pi);
-
-                } else if (TaskApp.getTaskRepo().getTaskbyId(TaskID).getTaskStatus() == 3) {
-                    if (calendar.get(Calendar.MONTH) == Calendar.JANUARY || calendar.get(Calendar.MONTH) == Calendar.MARCH || calendar.get(Calendar.MONTH) == Calendar.MAY || calendar.get(Calendar.MONTH) == Calendar.JULY
-                            || calendar.get(Calendar.MONTH) == Calendar.AUGUST || calendar.get(Calendar.MONTH) == Calendar.OCTOBER || calendar.get(Calendar.MONTH) == Calendar.DECEMBER) {
-                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 31, pi);
-                    }
-                    if (calendar.get(Calendar.MONTH) == Calendar.APRIL || calendar.get(Calendar.MONTH) == Calendar.JUNE || calendar.get(Calendar.MONTH) == Calendar.SEPTEMBER
-                            || calendar.get(Calendar.MONTH) == Calendar.NOVEMBER) {
-                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 30, pi);
-                    }
-                    if (calendar.get(Calendar.MONTH) == Calendar.FEBRUARY) {
-                        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 28, pi);
-                    }
-                }
+                break;
 
 
             }
@@ -295,6 +300,7 @@ public class TaskCounterFragment extends Fragment implements View.OnClickListene
                 Intent intent = new Intent(getContext(), Home.class);
                 startActivity(intent);
                 getActivity().finish();
+                break;
             }
         }
     }

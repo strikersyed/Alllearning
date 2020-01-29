@@ -35,12 +35,14 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
     private String tasktoday = "";
     private String tasktomow = "";
     private String taskupcoming = "";
+    private String tasklater = "";
     private ArrayList<Tasks> tasks = new ArrayList<>();
     private OnItemClick onItemClick,onStartClick,onCompleteClick;
     int todayindex = tasks.size();
     int tomowindex = tasks.size();
     int upcmindex;
-    int todaycnt,tomowcnt,upcmcnt;
+    int laterindex;
+    int todaycnt,tomowcnt,upcmcnt,latercnt;
     private StorageReference mStorageRef;
 
 
@@ -73,29 +75,47 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
 
-        //Currently Working Code
-        if (tasks.get(position).getTaskStatus() != 4) {
-            if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-tasks.get(position).getStartTime().toDate().getTime()))<=12) {
 
-                       /* holder.todayheaderview.setText("Upcoming");
+
+        holder.todaytitle.setText(tasks.get(position).getName());
+        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).placeholder(R.mipmap.ic_launcher_round).into(holder.todayimage);
+
+        if (tasks.get(position).getTaskStatus() == 0) {
+            holder.todaydescript.setText("Initialized");
+        } else if (tasks.get(position).getTaskStatus() == 1) {
+            holder.todaydescript.setText("Started");
+            //holder.start_tdytask.setImageResource(R.mipmap.pause);
+        } else if (tasks.get(position).getTaskStatus() == 2) {
+            holder.todaydescript.setText("Paused");
+        } else if (tasks.get(position).getTaskStatus() == 3) {
+            holder.todaydescript.setText("Pending");
+        } else if (tasks.get(position).getTaskStatus() == 4) {
+            holder.todaydescript.setText("Finished");
+        }
+        //Currently Working Code
+
+            if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
+
+                       /* holder.todayheaderview.setText("Late");
                         holder.todaytitle.setText(tasks.get(position).getName());
                         holder.todaydescript.setText("Work Starts at 10");
                         holder.todayimage.setImageURI(Uri.parse(tasks.get(position).getTaskImageUrl()));
                         holder.todayheader.setVisibility(View.VISIBLE);
                         holder.todaydesciptlayout.setVisibility(View.VISIBLE);*/
 
-                if (taskupcoming.equals("Upcoming") && upcmcnt>=0 && holder.getLayoutPosition() != upcmindex) {
+                if (taskupcoming.equals("Late") && upcmcnt>=0 && holder.getLayoutPosition() != upcmindex) {
                     holder.todayheader.setVisibility(View.GONE);
+
                 }
                 else {
-                    taskupcoming = "Upcoming";
+                    taskupcoming = "Late";
                     upcmindex = holder.getLayoutPosition();
                 }
 
                 upcmcnt = upcmcnt + 1;
-                holder.todayheaderview.setText("Upcoming");
+                holder.todayheaderview.setText("Late");
                 holder.todaytitle.setText(tasks.get(position).getName());
-                if (tasks.get(position).getTaskStatus() == 0) {
+               /* if (tasks.get(position).getTaskStatus() == 0) {
                     holder.todaydescript.setText("Initialized");
 
                 } else if (tasks.get(position).getTaskStatus() == 1) {
@@ -107,7 +127,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                     holder.todaydescript.setText("Pending");
                 } else if (tasks.get(position).getTaskStatus() == 4) {
                     holder.todaydescript.setText("Finished");
-                }
+                }*/
 
                 holder.todayoverbtn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -133,7 +153,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
                     if (!(tasks.get(position).getTaskImageUrl()==null)) {
-                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
                     }
                     else {
                         Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
@@ -144,7 +164,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         @Override
                         public void onSuccess(Uri uri) {
                             String url = uri.toString();
-                            Glide.with(mcontext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                            Glide.with(mcontext).load(url).into(holder.todayimage);
                         }
                     });
                 }
@@ -154,7 +174,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                     public void onClick(View v) {
                         /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -162,12 +182,12 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }*/
 
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
 
 
@@ -176,23 +196,23 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 //holder.upcomheader.setVisibility(View.VISIBLE);
 
             }
-            else if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-tasks.get(position).getStartTime().toDate().getTime()))>12
-                    && Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-tasks.get(position).getStartTime().toDate().getTime()))<24) {
+            else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
+                    && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
 
 
-                if (tasktoday.equals("Today") && todaycnt>=0 && holder.getLayoutPosition() != todayindex) {
+                if (tasktoday.equals("Upcoming") && todaycnt>=0 && holder.getLayoutPosition() != todayindex) {
                     holder.todayheader.setVisibility(View.GONE);
 
                 }
                 else {
                     todayindex = holder.getLayoutPosition();
-                    tasktoday = "Today";
+                    tasktoday = "Upcoming";
                 }
 
                 todaycnt = todaycnt + 1;
-                holder.todayheaderview.setText("Today");
+                holder.todayheaderview.setText("Upcoming");
                 holder.todaytitle.setText(tasks.get(position).getName());
-                if (tasks.get(position).getTaskStatus() == 0) {
+                /*if (tasks.get(position).getTaskStatus() == 0) {
                     holder.todaydescript.setText("Initialized");
 
                 } else if (tasks.get(position).getTaskStatus() == 1) {
@@ -204,13 +224,13 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                     holder.todaydescript.setText("Pending");
                 } else if (tasks.get(position).getTaskStatus() == 4) {
                     holder.todaydescript.setText("Finished");
-                }
+                }*/
                 holder.todaydesciptlayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -218,22 +238,13 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }*/
-                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
-                            Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
-                            mcontext.startActivity(intent);
-                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<tasks.size()){
-                            Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Tomorrow");
-                            mcontext.startActivity(intent);
-                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<todayindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
                             intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
-                        }
+
                     }
                 });
 
@@ -265,7 +276,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
                     if (!(tasks.get(position).getTaskImageUrl()==null)) {
-                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
                     }
                     else {
                         Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
@@ -276,7 +287,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         @Override
                         public void onSuccess(Uri uri) {
                             String url = uri.toString();
-                            Glide.with(mcontext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                            Glide.with(mcontext).load(url).into(holder.todayimage);
                         }
                     });
                 }
@@ -285,10 +296,10 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
 
 
-            } else if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-tasks.get(position).getStartTime().toDate().getTime()))>=24
-                    && Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-tasks.get(position).getStartTime().toDate().getTime()))<=48 ) {
+            } else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
+                    && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ) {
 
-                        /*holder.tomorrowtitle.setText(tasks.get(position).getName());
+                       /* holder.tomorrowtitle.setText(tasks.get(position).getName());
                         holder.tomorrowdescript.setText("Work Starts at 10");
                         //holder.todayimage.setImageURI(Uri.parse(tasks.get(position).getTaskImageUrl()));
                         holder.todayheader.setVisibility(View.GONE);
@@ -305,7 +316,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 tomowcnt = tomowcnt + 1;
                 holder.todayheaderview.setText("Tomorrow");
                 holder.todaytitle.setText(tasks.get(position).getName());
-                if (tasks.get(position).getTaskStatus() == 0) {
+                /*if (tasks.get(position).getTaskStatus() == 0) {
                     holder.todaydescript.setText("Initialized");
 
                 } else if (tasks.get(position).getTaskStatus() == 1) {
@@ -318,13 +329,13 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 } else if (tasks.get(position).getTaskStatus() == 4) {
                     holder.todaydescript.setText("Finished");
 
-                }
+                }*/
 
 
 
                 if (tasks.get(position).getPlatform().equals("Android")) {
                     if (!(tasks.get(position).getTaskImageUrl()==null)) {
-                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).sizeMultiplier(0.5f).into(holder.todayimage);
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
                     }
                     else {
                         Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
@@ -335,7 +346,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         @Override
                         public void onSuccess(Uri uri) {
                             String url = uri.toString();
-                            Glide.with(mcontext).load(url).sizeMultiplier(0.5f).into(holder.todayimage);
+                            Glide.with(mcontext).load(url).into(holder.todayimage);
                         }
                     });
                 }
@@ -357,8 +368,8 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","upcoming");
                             mcontext.startActivity(intent);
-                        }*/
-                        /*if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
+                        }
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
                             Intent intent = new Intent(mcontext, TodayOverview.class);
                             intent.putExtra("check","today");
                             mcontext.startActivity(intent);
@@ -382,7 +393,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                     public void onClick(View v) {
                         /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -390,7 +401,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }*/
 
@@ -403,27 +414,138 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 });
                 //holder.tomowheader.setVisibility(View.VISIBLE);
 
-            } else {
-                holder.parentlayout.setVisibility(View.GONE);
-                holder.parentlayout.removeAllViews();
+            }else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.get(position).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) > 48){
+                if (tasklater.equals("Later") && latercnt>=0 && holder.getLayoutPosition() != laterindex ) {
+                    holder.todayheader.setVisibility(View.GONE);
+                }
+                else {
+                    tasklater = "Later";
+                    laterindex = holder.getLayoutPosition();
+                }
+
+                latercnt = latercnt + 1;
+                holder.todayheaderview.setText("Later");
+                holder.todaytitle.setText(tasks.get(position).getName());
+                /*if (tasks.get(position).getTaskStatus() == 0) {
+                    holder.todaydescript.setText("Initialized");
+
+                } else if (tasks.get(position).getTaskStatus() == 1) {
+                    holder.todaydescript.setText("Started");
+                    holder.start_tdytask.setImageResource(R.mipmap.pause);
+                } else if (tasks.get(position).getTaskStatus() == 2) {
+                    holder.todaydescript.setText("Paused");
+                } else if (tasks.get(position).getTaskStatus() == 3) {
+                    holder.todaydescript.setText("Pending");
+                } else if (tasks.get(position).getTaskStatus() == 4) {
+                    holder.todaydescript.setText("Finished");
+
+                }*/
+
+
+
+                if (tasks.get(position).getPlatform().equals("Android")) {
+                    if (!(tasks.get(position).getTaskImageUrl()==null)) {
+                        Glide.with(mcontext).load(tasks.get(position).getTaskImageUrl()).into(holder.todayimage);
+                    }
+                    else {
+                        Glide.with(mcontext).load(R.drawable.demo3).into(holder.todayimage);
+                    }
+                } else {
+                    final StorageReference Ref = mStorageRef.child("Tasks").child(tasks.get(position).getTaskID()).child("Attachment").child("mountains.jpg");
+                    Ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            String url = uri.toString();
+                            Glide.with(mcontext).load(url).into(holder.todayimage);
+                        }
+                    });
+                }
+
+                holder.todayoverbtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        /*if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<tomowindex) {
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","today");
+                            mcontext.startActivity(intent);
+                        }
+                        else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=(tasks.size()-1)){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","tomorrow");
+                            mcontext.startActivity(intent);
+                        }
+                        else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<todayindex){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","upcoming");
+                            mcontext.startActivity(intent);
+                        }
+                        if (holder.getLayoutPosition()>=todayindex && holder.getLayoutPosition()<=todayindex+todaycnt) {
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","today");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tomowindex+tomowcnt){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=upcmindex+upcmcnt){
+                            Intent intent = new Intent(mcontext, TodayOverview.class);
+                            intent.putExtra("check","upcoming");
+                            mcontext.startActivity(intent);
+                        }*/
+                        Intent intent = new Intent(mcontext, TodayOverview.class);
+                        intent.putExtra("check","tomorrow");
+                        mcontext.startActivity(intent);
+                    }
+                });
+
+                holder.todaydesciptlayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        /*if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Upcoming");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Tomorrow");
+                            mcontext.startActivity(intent);
+                        }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(tasks.size())){
+                            Intent intent = new Intent(mcontext, Imageslider.class);
+                            intent.putExtra("check","Late");
+                            mcontext.startActivity(intent);
+                        }*/
+
+
+                        Intent intent = new Intent(mcontext, Imageslider.class);
+                        intent.putExtra("check","Tomorrow");
+                        mcontext.startActivity(intent);
+
+                    }
+                });
             }
 
 
-       /* if (position<todaytasks.size()) {
+            else {
+                /*holder.parentlayout.setVisibility(View.GONE);
+                holder.parentlayout.removeAllViews();*/
+            }
+
+
+        /*if (position<todaytasks.size()) {
             if (todaytasks.size() > 0) {
                 holder.todaytitle.setText(todaytasks.get(position).getName());
                 holder.todaydescript.setText("Work starting from 10");
                 holder.todayimage.setImageURI(Uri.parse(todaytasks.get(position).getTaskImageUrl()));
                 holder.todaydesciptlayout.setVisibility(View.VISIBLE);
                 holder.todayheader.setVisibility(View.VISIBLE);
-                *//*if (todaytitle==0) {
+                if (todaytitle==0) {
                     holder.todaydesciptlayout.setVisibility(View.VISIBLE);
                     holder.todayheader.setVisibility(View.VISIBLE);
                     todaytitle = 1;
                 } else {
                     holder.todaydesciptlayout.setVisibility(View.VISIBLE);
                     holder.todayheader.setVisibility(View.GONE);
-                }*//*
+                }
             } else {
 
             }
@@ -435,14 +557,14 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.tomorrowimage.setImageURI(Uri.parse(tomorrowtasks.get(position).getTaskImageUrl()));
                 holder.tomowdesciptlayout.setVisibility(View.VISIBLE);
                 holder.tomowheader.setVisibility(View.VISIBLE);
-               *//* if (tomorrowtitle==0) {
+                if (tomorrowtitle==0) {
                     holder.tomowdesciptlayout.setVisibility(View.VISIBLE);
                     holder.tomowheader.setVisibility(View.VISIBLE);
                     tomorrowtitle = 1;
                 } else {
                     holder.tomowdesciptlayout.setVisibility(View.VISIBLE);
                     holder.tomowheader.setVisibility(View.GONE);
-                }*//*
+                }
             } else {
 
             }
@@ -454,21 +576,21 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 holder.upcomingimage.setImageURI(Uri.parse(upcomingtasks.get(position).getTaskImageUrl()));
                 holder.upcomingdesciptlayout.setVisibility(View.VISIBLE);
                 holder.upcomheader.setVisibility(View.VISIBLE);
-                *//*if (upcomingtitle==0) {
+                if (upcomingtitle==0) {
                     holder.upcomingdesciptlayout.setVisibility(View.VISIBLE);
                     holder.upcomheader.setVisibility(View.VISIBLE);
                     upcomingtitle = 1;
                 } else {
                     holder.upcomingdesciptlayout.setVisibility(View.VISIBLE);
                     holder.upcomheader.setVisibility(View.GONE);
-                }*//*
+                }
 
             } else {
 
             }
         }*/
-        } else {
-            if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=todayindex){
+
+            /*if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<=todayindex){
                 if (upcmcnt>0) {
                     upcmcnt = upcmcnt - 1;
                 }
@@ -478,7 +600,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
@@ -492,11 +614,11 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Today");
+                    holder.todayheaderview.setText("Upcoming");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
-            } else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=tasks.size()){
+            } else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<=latercnt){
                 if (tomowcnt>0) {
                     tomowcnt = tomowcnt - 1;
                 }
@@ -510,10 +632,24 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
+            }else if (holder.getLayoutPosition()>=laterindex && holder.getLayoutPosition()<=tasks.size()){
+                if (latercnt>0) {
+                    latercnt = latercnt - 1;
+                }
+                if (holder.getLayoutPosition()==laterindex){
+                    if (holder.getLayoutPosition()==laterindex && latercnt == 0){
+                        holder.todaydesciptlayout.setVisibility(View.GONE);
+                        holder.todayheader.setVisibility(View.GONE);
+                    }
+                    holder.todaydesciptlayout.setVisibility(View.GONE);
+                    holder.todayheaderview.setText("Later");
+                } else {
+                    holder.parentlayout.removeAllViews();
+                }
             } else {
                 holder.todayheader.setVisibility(View.GONE);
-                holder.parentlayout.removeAllViews();
-            }
+                holder.parentlayout.removeAllViews();*//*
+            }*/
 
 
 
@@ -525,7 +661,7 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
@@ -549,20 +685,20 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
             }*/
 
-            /*if (holder.todaydesciptlayout.getVisibility()==View.VISIBLE){
+           /* if (holder.todaydesciptlayout.getVisibility()==View.VISIBLE){
                 holder.todaydesciptlayout.setVisibility(View.GONE);
             } else if (holder.tomowdesciptlayout.getVisibility()==View.VISIBLE){
                 holder.tomowdesciptlayout.setVisibility(View.GONE);
             }else if (holder.upcomingdesciptlayout.getVisibility()==View.VISIBLE){
                 holder.upcomingdesciptlayout.setVisibility(View.GONE);
             }*/
-        }
+
     }
 
     @Override
@@ -611,6 +747,8 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
 
 
 
+
+
             todayoverbtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -624,4 +762,24 @@ public class HomeVewAdapter extends RecyclerView.Adapter<HomeVewAdapter.ViewHold
         }
     }
 
+
+    @Override
+    public int getItemViewType(int position) {
+
+        /*if (TextUtils.isEmpty(taskupcoming) && upcmcnt==0 ||
+                TextUtils.isEmpty(tasktoday) && todaycnt==0 ||
+                TextUtils.isEmpty(tasktomow) && tomowcnt==0 ||
+                TextUtils.isEmpty(tasklater) && latercnt==0){
+            return 0;
+      *//*  } else if (TextUtils.isEmpty(tasktoday) && todaycnt==0){
+            return 0;
+        }else if (TextUtils.isEmpty(tasktomow) && tomowcnt==0){
+            return 0;
+        }else if (TextUtils.isEmpty(tasklater) && latercnt==0){
+            return 0;*//*
+        }else {
+            return 1;
+        }*/
+        return super.getItemViewType(position);
+    }
 }

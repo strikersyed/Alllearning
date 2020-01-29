@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.ast.taskApp.Utils.PreferenceUtils;
 import com.bumptech.glide.request.RequestOptions;
 import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.Models.Users;
@@ -31,6 +32,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -39,6 +41,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.novoda.merlin.Bindable;
 import com.novoda.merlin.Connectable;
 import com.novoda.merlin.Disconnectable;
@@ -218,21 +222,22 @@ public class Login extends MerlinActivity implements Connectable, Disconnectable
             if (task.isSuccessful()) {
 
                 GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder()
+                        .requestIdToken(getString(R.string.default_web_client_id))
                         .requestEmail()
                         .build();
 
                 googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
-
                 final AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
 
-                auth.signInWithCredential(credential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        newuser = task.getResult().getAdditionalUserInfo().isNewUser();
+                    auth.signInWithCredential(credential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                newuser = task.getResult().getAdditionalUserInfo().isNewUser();
 
-                        firebaseUser = auth.getCurrentUser();
-                        if (newuser){
+                                firebaseUser = auth.getCurrentUser();
+                                if (newuser) {
 
 
                                    /* Users users = new Users();
@@ -249,71 +254,109 @@ public class Login extends MerlinActivity implements Connectable, Disconnectable
                                     users.setSubscriptionType(0);
                                     users.setUserID(db.collection("Users").document().getId());
                                     UserID = users.getUserID();*/
-                            String[] arr = firebaseUser.getDisplayName().split(" ");
-                            String firstname = arr[0].trim();
+                                    String[] arr = firebaseUser.getDisplayName().split(" ");
+                                    String firstname = arr[0].trim();
 
-                            HashMap<String,Object> users = new HashMap<>();
-                            users.put("email",firebaseUser.getEmail());
-                            users.put("firstName",firstname);
-                            users.put("fullName",firebaseUser.getDisplayName());
-                            users.put("isLoggedin",1);
-                            users.put("platform","Android");
-                            users.put("profilePicture",firebaseUser.getPhotoUrl().toString());
-                            users.put("subscriptionType",0);
-                            users.put("userID",auth.getCurrentUser().getUid());
+                                    HashMap<String, Object> users = new HashMap<>();
+                                    users.put("email", firebaseUser.getEmail());
+                                    users.put("firstName", firstname);
+                                    users.put("fullName", firebaseUser.getDisplayName());
+                                    users.put("isLoggedin", 1);
+                                    users.put("platform", "Android");
+                                    users.put("profilePicture", firebaseUser.getPhotoUrl().toString());
+                                    users.put("subscriptionType", 0);
+                                    users.put("userID", auth.getCurrentUser().getUid());
 
-                            db.collection("Users").document(auth.getCurrentUser().getUid()).set(users).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
+                                    db.collection("Users").document(auth.getCurrentUser().getUid()).set(users).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
 
 
-                                    Users users1 = new Users();
-                                    users1.setEmail(firebaseUser.getEmail());
-                                    users1.setFirstname(firstname);
-                                    users1.setFullname(firebaseUser.getDisplayName());
-                                    users1.setIsLoggedin(1);
-                                    users1.setPlatform("Android");
-                                    try {
-                                        users1.setProfilepic(firebaseUser.getPhotoUrl().toString());
-                                    } catch (Exception e) {
-                                        users1.setProfilepic(null);
-                                    }
-                                    users1.setSubscriptionType(0);
-                                    users1.setUserID(firebaseUser.getUid());
+                                                Users users1 = new Users();
+                                                users1.setEmail(firebaseUser.getEmail());
+                                                users1.setFirstName(firstname);
+                                                users1.setFullName(firebaseUser.getDisplayName());
+                                                users1.setIsLoggedin(1);
+                                                users1.setPlatform("Android");
+                                                try {
+                                                    users1.setProfilePicture(firebaseUser.getPhotoUrl().toString());
+                                                } catch (Exception e) {
+                                                    users1.setProfilePicture(null);
+                                                }
+                                                users1.setSubscriptionType(0);
+                                                users1.setUserID(firebaseUser.getUid());
 
-                                    TaskApp.getUserRepo().insertUser(users1);
+                                                TaskApp.getUserRepo().insertUser(users1);
 
-                                        Intent intent = new Intent(Login.this, SubscriptionView.class);
-                                        startActivity(intent);
+                                                Intent intent = new Intent(Login.this, SubscriptionView.class);
+                                                startActivity(intent);
 
-                                    }
+                                            }
+                                        }
+                                    });
+                                } else {
+
+                                    db.collection("Users").document(firebaseUser.getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            db.collection("Users").document(firebaseUser.getUid()).update("isLoggedin", 1);
+                                            Users users = task.getResult().toObject(Users.class);
+                                            TaskApp.getUserRepo().updateUser(users);
+
+                                            PreferenceUtils.setUser(users.getEmail(), users.getFirstName(), users.getFullName(), users.getIsLoggedin(), users.getPlatform(), users.getProfilePicture(), users.getSubscriptionType(), users.getUserID(), Login.this);
+
+                                            db.collection("Tasks")
+                                                    .whereEqualTo("userID", firebaseUser.getUid())
+                                                    .orderBy("startTime", Query.Direction.DESCENDING)
+                                                    .get()
+                                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                                        @Override
+                                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+
+                                                            for (DocumentSnapshot snapshot : queryDocumentSnapshots.getDocuments()) {
+
+                                                                Tasks tasks = snapshot.toObject(Tasks.class);
+
+                                                                if (TaskApp.getTaskRepo().getAllTasks(firebaseUser.getUid()).size() != 0) {
+                                                                    TaskApp.getTaskRepo().updateTask(tasks);
+                                                                } else {
+                                                                    TaskApp.getTaskRepo().insertTasks(tasks);
+                                                                }
+
+                                                            }
+
+                                                            if (users.getSubscriptionType() == 0) {
+
+                                                                Intent intent = new Intent(Login.this, SubscriptionView.class);
+                                                                startActivity(intent);
+                                                                finish();
+                                                                //Toast.makeText(Login.this, "Subscribed", Toast.LENGTH_SHORT).show();
+                                                            } else {
+
+                                                                Intent intent = new Intent(Login.this, Home.class);
+                                                                startActivity(intent);
+                                                                finish();
+                                                                //Toast.makeText(Login.this, "Subscribed", Toast.LENGTH_SHORT).show();
+                                                            }
+
+                                                        }
+                                                    });
+
+                                        }
+                                    });
                                 }
-                            });
-                        } else {
-
-                            db.collection("Users").document(firebaseUser.getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    db.collection("Users").document(firebaseUser.getUid()).update("isLoggedin",1);
-                                    Users users = task.getResult().toObject(Users.class);
-                                    TaskApp.getUserRepo().updateUser(users);
-                                    if (users.getSubscriptionType() == 0) {
-                                        Intent intent = new Intent(Login.this, SubscriptionView.class);
-                                        startActivity(intent);
-                                        //Toast.makeText(Login.this, "Subscribed", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Intent intent = new Intent(Login.this, Home.class);
-                                        startActivity(intent);
-                                        //Toast.makeText(Login.this, "Subscribed", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
+                            } else {
+                                Toast.makeText(Login.this, "Connectivity Lost", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
 
-            }
+                    });
+                }
+                else {
+                    //Toast.makeText(Login.this,task.getException().getLocalizedMessage(),Toast.LENGTH_LONG).show();
+                }
+
         } catch (Exception e ){
             Toast.makeText(this, "No User Found", Toast.LENGTH_SHORT).show();
         }

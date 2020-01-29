@@ -1,5 +1,6 @@
 package com.ast.taskApp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -14,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,15 +23,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ast.taskApp.Sections.Late;
+import com.ast.taskApp.Sections.Today;
+import com.ast.taskApp.Sections.Tomorrow;
+import com.ast.taskApp.Sections.Upcoming;
+import com.ast.taskApp.Utils.PreferenceUtils;
 import com.bumptech.glide.Glide;
 import com.ast.taskApp.Activities.NewTaskActivity;
 import com.ast.taskApp.Adapters.HomeFirestoreAdapter;
 import com.ast.taskApp.Adapters.HomeVewAdapter;
 import com.ast.taskApp.Models.Tasks;
-import com.ast.taskApp.Models.Users;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -49,10 +54,14 @@ import com.yarolegovich.slidingrootnav.callback.DragListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 
-public class Home extends AppCompatActivity implements DragListener, HomeVewAdapter.OnItemClick {
+public class Home extends AppCompatActivity implements DragListener,Upcoming.OnItemClick, Today.OnItemClick, Tomorrow.OnItemClick, Late.OnItemClick {
 
     String personName,personEmail;
     Toolbar toolbar;
@@ -79,6 +88,9 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
     MerlinsBeard merlinsBeard;
     FirebaseAuth auth;
     String ID;
+    ArrayList<Tasks> tasksNew;
+    Context context;
+    SectionedRecyclerViewAdapter viewAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +105,7 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
         //window.setStatusBarColor(getResources().getColor(R.color.white));
 
         setContentView(R.layout.activity_home);
+        context = this;
         auth = FirebaseAuth.getInstance();
         merlinsBeard = new MerlinsBeard.Builder().build(this);
         toolbar = findViewById(R.id.toolbar);
@@ -102,6 +115,7 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
         editor = sharedPreferences.edit();
         newtask = findViewById(R.id.newtask_btn);
         recyclerView = findViewById(R.id.recycler);
+        viewAdapter = new SectionedRecyclerViewAdapter();
 
         /*recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -120,7 +134,7 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
 
         googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
-        final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        /*final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
             personName = acct.getDisplayName();
             //String personGivenName = acct.getGivenName();
@@ -128,12 +142,50 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
             personEmail = acct.getEmail();
             //String personId = acct.getId();
             personPhoto = acct.getPhotoUrl();
-        }
+        }*/
 
         //getFirestoreData();
-        tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(auth.getCurrentUser().getUid());
-        adapter = new HomeVewAdapter(Home.this, tasks, Home.this, Home.this, Home.this);
-        recyclerView.setAdapter(adapter);
+        tasksNew = new ArrayList<>();
+        todaytsks = new ArrayList<>();
+        tomorrowtsks = new ArrayList<>();
+        upcomingtsks = new ArrayList<>();
+
+
+        tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(TaskApp.getAuth().getCurrentUser().getUid());
+        for (Tasks tasks : tasks){
+
+            if (tasks.getTaskStatus() != 4){
+                if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
+                    upcomingtsks.add(tasks);
+                }
+                else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
+                        && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
+                    todaytsks.add(tasks);
+                }
+                else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
+                        && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ){
+                    tomorrowtsks.add(tasks);
+                }
+                else {
+                    tasksNew.add(tasks);
+                }
+            }
+        }
+        Comparator<Tasks> c = new Comparator<Tasks>() {
+
+            @Override
+            public int compare(Tasks a, Tasks b) {
+                return Long.compare(a.getStartTime().getSeconds() * 1000, b.getStartTime().getSeconds() * 1000);
+            }
+        };
+        Collections.sort(tasksNew, c);
+        //adapter = new HomeVewAdapter(Home.this, tasks, Home.this, Home.this, Home.this);
+        viewAdapter = new SectionedRecyclerViewAdapter();
+        viewAdapter.addSection(new Upcoming(upcomingtsks,context,this,this,this));
+        viewAdapter.addSection(new Today(todaytsks,context,this,this,this));
+        viewAdapter.addSection(new Tomorrow(tomorrowtsks,context,this,this,this));
+        viewAdapter.addSection(new Late(tasksNew,context,this,this,this));
+        recyclerView.setAdapter(viewAdapter);
         //adapter.notifyDataSetChanged();
         /*if (merlinsBeard.isConnected()) {
             adapter = new HomeVewAdapter(this, tasks, this, this, this);
@@ -175,11 +227,16 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
         name = findViewById(R.id.name);
         email = findViewById(R.id.email);
         calendar = findViewById(R.id.calendar);
-        CircleImageView circularImageView = findViewById(R.id.profilepic);
+        /*CircleImageView circularImageView = findViewById(R.id.profilepic);
         Glide.with(this).asBitmap().load(personPhoto).into(circularImageView);
 
         name.setText(personName);
-        email.setText(personEmail);
+        email.setText(personEmail);*/
+        CircleImageView circularImageView = findViewById(R.id.profilepic);
+
+        Glide.with(this).asBitmap().load(PreferenceUtils.getImage(context)).into(circularImageView);
+        name.setText(PreferenceUtils.getName(context));
+        email.setText(PreferenceUtils.getEmail(context));
 
 
         todayoverview = findViewById(R.id.todayoverview);
@@ -221,17 +278,31 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ID = auth.getCurrentUser().getUid();
-                auth.signOut();
-                googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        db.collection("Users").document(ID).update("isLoggedin",0);
-                        Intent intent = new Intent(Home.this,Login.class);
-                        startActivity(intent);
-                        finish();
-                    }
-                });
+                //ID = auth.getCurrentUser().getUid();
+
+                db.collection("Users")
+                        .document(TaskApp.getAuth().getCurrentUser().getUid()).update("isLoggedin",0)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    auth.signOut();
+                                    googleSignInClient.signOut();
+                                    PreferenceUtils.clearMemory(context);
+                                    if (PreferenceUtils.clearMemory(context)) {
+                                        Intent intent1 = new Intent(context, Login.class);
+                                        intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent1);
+                                    }
+                                }
+                                else {
+
+                                    Toast.makeText(context, "Unable to logout!", Toast.LENGTH_SHORT).show();
+                                }
+
+                            }
+                        });
+
             }
         });
 
@@ -254,6 +325,7 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
                 finish();
             }
         });
+
         /*resideMenu = new ResideMenu(Home.this);
         resideMenu.setBackgroundColor(getResources().getColor(R.color.theme));
         resideMenu.attachToActivity(Home.this);
@@ -458,56 +530,170 @@ public class Home extends AppCompatActivity implements DragListener, HomeVewAdap
     }
 
     @Override
-    public void onstartClick(int position) {
+    public void onstartClick(int position,String listname,String taskID) {
         //String taskid = options.getSnapshots().get(position).getTaskID();
-        String taskid = tasks.get(position).getTaskID();
-        if (tasks.get(position).getTaskStatus()!=3) {
-            if (tasks.get(position).getTaskStatus() == 0 || tasks.get(position).getTaskStatus() == 2) {
+        int index = 0;
+        String taskid = "";
+        int cposition = position - 1;
+        if (listname.equals("upcoming")){
+            for (int l = 0;l <upcomingtsks.size();l++){
+                if (upcomingtsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = upcomingtsks.get(l).getTaskID();
+                    break;
+                }
+            }
+           tasks.clear();
+           tasks.addAll(upcomingtsks);
+        } else if (listname.equals("today")){
+            for (int l = 0;l <todaytsks.size();l++){
+                if (todaytsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = todaytsks.get(l).getTaskID();
+                    break;
+                }
+            }
+            tasks.clear();
+            tasks.addAll(todaytsks);
+        } else if (listname.equals("tomorrow")){
+            for (int l = 0;l <tomorrowtsks.size();l++){
+                if (tomorrowtsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = tomorrowtsks.get(l).getTaskID();
+                    break;
+                }
+            }
+            tasks.clear();
+            tasks.addAll(tomorrowtsks);
+        } else if (listname.equals("late")){
+            for (int l = 0;l <tasksNew.size();l++){
+                if (tasksNew.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = tasksNew.get(l).getTaskID();
+                    break;
+                }
+            }
+            //taskid = tasksNew.get(position).getTaskID();
+            tasks.clear();
+            tasks.addAll(tasksNew);
+        }
+
+
+        if (tasks.get(index).getTaskStatus()!=3) {
+            if (tasks.get(index).getTaskStatus() == 0 || tasks.get(index).getTaskStatus() == 2) {
                 ImageView imageView = recyclerView.findViewById(R.id.start_todaytask);
-                imageView.setImageResource(R.mipmap.pause);
+                imageView.setImageResource(R.mipmap.start);
                 db.collection("Tasks").document(taskid).update("taskStatus", 1);
-                Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID());
+                Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
                 if (taskss != null) {
                     taskss.setTaskStatus(1);
-                    tasks.get(position).setTaskStatus(1);
+                    tasks.get(index).setTaskStatus(1);
                     TaskApp.getTaskRepo().updateTask(taskss);
                 } else {
-                    TaskApp.getTaskRepo().insertTasks(tasks.get(position));
+                    TaskApp.getTaskRepo().insertTasks(tasks.get(index));
                 }
 
             } else {
                 ImageView imageView = recyclerView.findViewById(R.id.start_todaytask);
-                imageView.setImageResource(R.mipmap.start);
+                imageView.setImageResource(R.mipmap.pause);
                 db.collection("Tasks").document(taskid).update("taskStatus", 2);
-                Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID());
+                Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
                 if (taskss != null) {
                     taskss.setTaskStatus(2);
-                    tasks.get(position).setTaskStatus(2);
+                    tasks.get(index).setTaskStatus(2);
                     TaskApp.getTaskRepo().updateTask(taskss);
                 } else {
-                    TaskApp.getTaskRepo().insertTasks(tasks.get(position));
+                    TaskApp.getTaskRepo().insertTasks(tasks.get(index));
                 }
             }
-            adapter.notifyItemChanged(position);
+            viewAdapter.notifyItemChanged(position);
         }
 
     }
 
     @Override
-    public void oncompleteclick(int position) {
+    public void oncompleteclick(int position,String listname,String taskID) {
         //String taskid = options.getSnapshots().get(position).getTaskID();
-        String taskid = tasks.get(position).getTaskID();
+        String taskid = "";
+        int cposition = position - 1;
+        int index = 0;
+        if (listname.equals("upcoming")){
+            for (int l = 0;l <upcomingtsks.size();l++){
+                if (upcomingtsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = upcomingtsks.get(l).getTaskID();
+                    break;
+                }
+            }
+            tasks.clear();
+            tasks.addAll(upcomingtsks);
+        } else if (listname.equals("today")){
+            for (int l = 0;l <todaytsks.size();l++){
+                if (todaytsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = todaytsks.get(l).getTaskID();
+                    break;
+                }
+            }
+            tasks.clear();
+            tasks.addAll(todaytsks);
+        } else if (listname.equals("tomorrow")){
+            for (int l = 0;l <tomorrowtsks.size();l++){
+                if (tomorrowtsks.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = tomorrowtsks.get(l).getTaskID();
+                    break;
+                }
+            }
+            tasks.clear();
+            tasks.addAll(tomorrowtsks);
+        } else if (listname.equals("late")){
+            for (int l = 0;l <tasksNew.size();l++){
+                if (tasksNew.get(l).getTaskID()==taskID){
+                    index = l;
+                    taskid = tasksNew.get(l).getTaskID();
+                    break;
+                }
+            }
+            //taskid = tasksNew.get(position).getTaskID();
+            tasks.clear();
+            tasks.addAll(tasksNew);
+        }
         db.collection("Tasks").document(taskid).update("taskStatus",4);
-        Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(position).getTaskID());
+        Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
         if (taskss!=null){
             taskss.setTaskStatus(4);
             TaskApp.getTaskRepo().updateTask(taskss);
         }
-        tasks.remove(position);
+        else {
+            TaskApp.getTaskRepo().insertTasks(taskss);
+        }
+        if (listname.equals("upcoming")){
+            upcomingtsks.remove(index);
+        } else if (listname.equals("today")){
+            todaytsks.remove(index);
+        } else if (listname.equals("tomorrow")){
+            tomorrowtsks.remove(index);
+        } else if (listname.equals("late")){
+            tasksNew.remove(index);
+        }
         recyclerView.removeViewAt(position);
         //TaskApp.getTaskRepo().deleteTasks(tasks.get(position).getTaskID());
-        adapter.notifyItemRemoved(position);
+        viewAdapter.notifyItemRemoved(position);
+        viewAdapter.notifyDataSetChanged();
 
 
+    }
+
+    @Override
+    public void onlongclick(int position, String listname,String taskID) {
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        finish();
     }
 }

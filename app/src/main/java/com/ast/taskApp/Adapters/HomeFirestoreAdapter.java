@@ -69,23 +69,23 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
         if (model.getTaskStatus() != 4) {
             if (Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-model.getStartTime().toDate().getTime()))<=12) {
 
-                       /* holder.todayheaderview.setText("Upcoming");
+                       /* holder.todayheaderview.setText("Late");
                         holder.todaytitle.setText(tasks.get(position).getName());
                         holder.todaydescript.setText("Work Starts at 10");
                         holder.todayimage.setImageURI(Uri.parse(tasks.get(position).getTaskImageUrl()));
                         holder.todayheader.setVisibility(View.VISIBLE);
                         holder.todaydesciptlayout.setVisibility(View.VISIBLE);*/
 
-                if (taskupcoming.equals("Upcoming") && upcmcnt>=0 && holder.getLayoutPosition() != upcmindex) {
+                if (taskupcoming.equals("Late") && upcmcnt>=0 && holder.getLayoutPosition() != upcmindex) {
                     holder.todayheader.setVisibility(View.GONE);
                 }
                 else {
-                    taskupcoming = "Upcoming";
+                    taskupcoming = "Late";
                     upcmindex = holder.getLayoutPosition();
                 }
 
                 upcmcnt = upcmcnt + 1;
-                holder.todayheaderview.setText("Upcoming");
+                holder.todayheaderview.setText("Late");
                 holder.todaytitle.setText(model.getName());
                 if (model.getTaskStatus() == 0) {
                     holder.todaydescript.setText("Initialized");
@@ -137,7 +137,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                     public void onClick(View v) {
                         if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -145,7 +145,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(getSnapshots().size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }
                     }
@@ -157,17 +157,17 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
             && Math.abs(TimeUnit.MILLISECONDS.toHours(Timestamp.now().toDate().getTime()-model.getStartTime().toDate().getTime()))<24) {
 
 
-                    if (tasktoday.equals("Today") && todaycnt>=0 && holder.getLayoutPosition() != todayindex) {
+                    if (tasktoday.equals("Upcoming") && todaycnt>=0 && holder.getLayoutPosition() != todayindex) {
                         holder.todayheader.setVisibility(View.GONE);
 
                     }
                     else {
                         todayindex = holder.getLayoutPosition();
-                        tasktoday = "Today";
+                        tasktoday = "Upcoming";
                         }
 
                 todaycnt = todaycnt + 1;
-                holder.todayheaderview.setText("Today");
+                holder.todayheaderview.setText("Upcoming");
                 holder.todaytitle.setText(model.getName());
                 if (model.getTaskStatus() == 0) {
                     holder.todaydescript.setText("Initialized");
@@ -186,7 +186,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                     public void onClick(View v) {
                         if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -194,7 +194,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(getSnapshots().size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }
                     }
@@ -313,7 +313,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                     public void onClick(View v) {
                         if (holder.getLayoutPosition()>todayindex && holder.getLayoutPosition()<tomowindex) {
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Today");
+                            intent.putExtra("check","Upcoming");
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=tomowindex && holder.getLayoutPosition()<upcmindex){
                             Intent intent = new Intent(mcontext, Imageslider.class);
@@ -321,7 +321,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                             mcontext.startActivity(intent);
                         }else if (holder.getLayoutPosition()>=upcmindex && holder.getLayoutPosition()<(getSnapshots().size())){
                             Intent intent = new Intent(mcontext, Imageslider.class);
-                            intent.putExtra("check","Upcoming");
+                            intent.putExtra("check","Late");
                             mcontext.startActivity(intent);
                         }
                     }
@@ -400,7 +400,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
@@ -412,7 +412,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Today");
+                    holder.todayheaderview.setText("Upcoming");
                 } else {
                    holder.parentlayout.removeAllViews();
                 }
@@ -442,7 +442,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }
@@ -466,7 +466,7 @@ public class HomeFirestoreAdapter extends FirestoreRecyclerAdapter<Tasks,HomeFir
                         holder.todayheader.setVisibility(View.GONE);
                     }
                     holder.todaydesciptlayout.setVisibility(View.GONE);
-                    holder.todayheaderview.setText("Upcoming");
+                    holder.todayheaderview.setText("Late");
                 } else {
                     holder.parentlayout.removeAllViews();
                 }

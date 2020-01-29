@@ -1,5 +1,6 @@
 package com.ast.taskApp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -10,12 +11,14 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ast.taskApp.Utils.PreferenceUtils;
 import com.bumptech.glide.Glide;
 import com.ast.taskApp.Activities.NewTaskActivity;
 import com.ast.taskApp.Adapters.TodayFirestoreAdapter;
@@ -40,6 +43,9 @@ import com.yarolegovich.slidingrootnav.callback.DragListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -67,6 +73,8 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
     Query query;
     MerlinsBeard merlinsBeard;
     FirebaseAuth auth;
+    Context context;
+    ArrayList<Tasks> tasksNew, todaytsks,tomorrowtsks,upcomingtsks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +87,7 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
         window.setStatusBarColor(Color.WHITE);
         setContentView(R.layout.activity_today_overview);
 
-
+        context = this;
         merlinsBeard = new MerlinsBeard.Builder().build(this);
         auth = FirebaseAuth.getInstance();
         heading = findViewById(R.id.overvw_heading);
@@ -99,7 +107,7 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
         toolbar.setNavigationIcon(R.mipmap.menu);
 
         try {
-            if (getIntent().getExtras().get("check").equals("overduetasks")){
+            if (getIntent().getExtras().get("check").equals("overduetasks") || getIntent().getExtras().get("check").equals("overduetasks")){
                 heading.setText("Overduetasks Overview");
             }
             else if (getIntent().getExtras().get("check").equals("tomorrow")){
@@ -134,7 +142,7 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
         googleSignInClient = GoogleSignIn.getClient(this,googleSignInOptions);
 
 
-        final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        /*final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
             personName = acct.getDisplayName();
             //String personGivenName = acct.getGivenName();
@@ -142,11 +150,72 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
             personEmail = acct.getEmail();
             //String personId = acct.getId();
             personPhoto = acct.getPhotoUrl();
-        }
+        }*/
+        personEmail = PreferenceUtils.getEmail(context);
+        personName = PreferenceUtils.getName(context);
+        personPhoto = Uri.parse(PreferenceUtils.getImage(context));
+
+        tasksNew = new ArrayList<>();
+        todaytsks = new ArrayList<>();
+        tomorrowtsks = new ArrayList<>();
+        upcomingtsks = new ArrayList<>();
+
+        tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(TaskApp.getAuth().getCurrentUser().getUid());
+        for (Tasks tasks : tasks){
+
+            if (tasks.getTaskStatus() != 4 && tasks.getTaskStatus() != 3){
+                if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
+                    upcomingtsks.add(tasks);
+                }
+                else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
+                        && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
+                    todaytsks.add(tasks);
+                }
+                else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
+                        && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ){
+                    tomorrowtsks.add(tasks);
+                }
+                else {
+                    tasksNew.add(tasks);
+                }
+                }
+            else if (tasks.getTaskStatus()==3){
+                tasksNew.add(tasks);
+            }
+            }
+        Comparator<Tasks> c = new Comparator<Tasks>() {
+
+            @Override
+            public int compare(Tasks a, Tasks b) {
+                return Long.compare(a.getStartTime().getSeconds() * 1000, b.getStartTime().getSeconds() * 1000);
+            }
+        };
+        Collections.sort(tasksNew, c);
 
 
         tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(auth.getCurrentUser().getUid());
-        adapter = new TodayOverViewAdapter(TodayOverview.this,tasks,getIntent().getExtras().get("check").toString());
+        try {
+            if (getIntent().getExtras().get("check").equals("overduetasks") || getIntent().getExtras().get("check").equals("overduetasks")){
+                adapter = new TodayOverViewAdapter(TodayOverview.this,tasksNew,getIntent().getExtras().get("check").toString());
+            }
+            else if (getIntent().getExtras().get("check").equals("tomorrow")){
+                adapter = new TodayOverViewAdapter(TodayOverview.this,tomorrowtsks,getIntent().getExtras().get("check").toString());
+            }
+            else if (getIntent().getExtras().get("check").equals("upcoming")){
+                adapter = new TodayOverViewAdapter(TodayOverview.this,upcomingtsks,getIntent().getExtras().get("check").toString());
+
+            }else if (getIntent().getExtras().get("check").equals("today")){
+                adapter = new TodayOverViewAdapter(TodayOverview.this,todaytsks,getIntent().getExtras().get("check").toString());
+
+            }
+
+
+        }
+        catch (Exception e){
+            Toast.makeText(this,e.getLocalizedMessage(),Toast.LENGTH_LONG);
+
+        }
+        //adapter = new TodayOverViewAdapter(TodayOverview.this,tasksNew,getIntent().getExtras().get("check").toString());
         recyclerView.setAdapter(adapter);
 
         /*if (merlinsBeard.isConnected()){
@@ -216,14 +285,28 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                auth.signOut();
-                googleSignInClient.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Intent intent = new Intent(TodayOverview.this,Login.class);
-                        startActivity(intent);
-                    }
-                });
+                db.collection("Users")
+                        .document(TaskApp.getAuth().getCurrentUser().getUid()).update("isLoggedin",0)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    auth.signOut();
+                                    googleSignInClient.signOut();
+                                    PreferenceUtils.clearMemory(context);
+                                    if (PreferenceUtils.clearMemory(context)) {
+                                        Intent intent1 = new Intent(context, Login.class);
+                                        intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent1);
+                                    }
+                                }
+                                else {
+
+                                    Toast.makeText(context, "Unable to logout!", Toast.LENGTH_SHORT).show();
+                                }
+
+                            }
+                        });
             }
         });
 

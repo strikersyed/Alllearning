@@ -1,6 +1,7 @@
 package com.ast.taskApp.Activities;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
@@ -18,19 +19,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.Window;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -43,8 +48,8 @@ import androidx.work.Data;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
 
+import com.andrognito.flashbar.Flashbar;
 import com.ast.taskApp.AlarmReceiver;
 import com.ast.taskApp.BaseClasses.BaseActivity;
 import com.ast.taskApp.Home;
@@ -55,7 +60,6 @@ import com.ast.taskApp.TaskApp;
 import com.ast.taskApp.TaskDB;
 import com.ast.taskApp.Utils.Constants;
 import com.ast.taskApp.Utils.PreferenceUtils;
-import com.ast.taskApp.Workers.TaskStartWorker;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -64,7 +68,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.jaredrummler.materialspinner.MaterialSpinner;
-import com.novoda.merlin.MerlinsBeard;
 import com.unsplash.pickerandroid.photopicker.UnsplashPhotoPicker;
 import com.unsplash.pickerandroid.photopicker.data.UnsplashPhoto;
 import com.unsplash.pickerandroid.photopicker.presentation.UnsplashPickerActivity;
@@ -79,18 +82,21 @@ import java.util.Locale;
 public class NewTaskActivity extends BaseActivity implements View.OnClickListener {
 
     Context context;
+    OneTimeWorkRequest oneTimeWorkRequest;
+    WorkManager workManager;
+    Constraints constraints;
 
     TaskDB taskDB;
     Calendar calendar;
-    SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy hh:mm a");
     TimePickerDialog timePickerDialog;
+    DatePickerDialog datePickerDialog;
     Tasks tasks;
     Date startTime;
     Date endTime;
     long startTimeInMillis;
     long endTimeInMillis;
     ArrayList<String> daysList;
-    Constraints constraints;
 
     MaterialSpinner ringtone_selector;
     private EditText task_name, task_place;
@@ -100,8 +106,10 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     private ImageButton back_btn;
     private CheckBox mon, tue, wed, thu, fri, sat, sun;
     private TextView image_name;
-    private LinearLayout taskName_layout;
-    WorkManager workManager;
+    private LinearLayout taskName_layout, taskPlace_layout, deadLine_layout, repeat_layout, ringtone_layout;
+    private RelativeLayout image_layout;
+    private ScrollView scrollView;
+
     private boolean isStart = true;
     private boolean isEnd = false;
     private String taskTag = "testing";
@@ -111,39 +119,21 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     private String taskid;
     private String photourl;
     private Uri tuneUri, imageUri;
-    MerlinsBeard merlinsBeard;
-    OneTimeWorkRequest oneTimeWorkRequest;
+    private int repeatOn = 0;
 
     //ProgressDialog dialog;
 
-
-    TimePickerDialog tpd;
-    DatePickerDialog dpd;
-
-    TextView start_time, end_time, start_date, end_date;
-    RelativeLayout imageupload, newtag;
-
-    //Timestamp startdate, startime, enddate, endtime;
+    TextView start_time, end_time;
     private RadioGroup repeat;
     private RadioButton once, daily, weekly, monthly;
-    Integer repeatOn;
-    List<Users> users = new ArrayList<>();
-    String durl;
 
 
     List<Uri> ringtoneuris = new ArrayList<>();
     ArrayList<UnsplashPhoto> photos = new ArrayList<>();
-    SharedPreferences sharedPreferences;
-    Calendar sdate, edate;
-
-
-    private boolean unsplash, cameraupl, imagechoosen;
-    Window window;
 
     private PendingIntent pendingIntent;
     private AlarmManager alarmManager;
     PendingIntent monintent, tueintent, wedintent, thuintent, friintent, satintent, sunintent;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,7 +145,9 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
     }
 
     private void setUpViews() {
+
         workManager = WorkManager.getInstance();
+        constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
         taskDB = new TaskDB(this);
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         calendar = Calendar.getInstance();
@@ -165,7 +157,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         daysList = new ArrayList<>();
 
         //dialog = new ProgressDialog(this);
-        merlinsBeard = new MerlinsBeard.Builder().build(this);
+
         back_btn = findViewById(R.id.back_btn);
         task_name = findViewById(R.id.task_name);
         task_place = findViewById(R.id.task_place);
@@ -187,6 +179,12 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         image_name = findViewById(R.id.image_name);
         repeat = findViewById(R.id.repeatgroup);
         taskName_layout = findViewById(R.id.taskName_layout);
+        taskPlace_layout = findViewById(R.id.taskPlace_layout);
+        deadLine_layout = findViewById(R.id.deadLine_layout);
+        repeat_layout = findViewById(R.id.repeat_layout);
+        ringtone_layout = findViewById(R.id.ringtone_layout);
+        image_layout = findViewById(R.id.image_layout);
+        scrollView = findViewById(R.id.scrollView);
 
         once = findViewById(R.id.once);
         daily = findViewById(R.id.daily);
@@ -202,9 +200,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         onstart.setOnClickListener(this);
         onend.setOnClickListener(this);
         add_btn.setOnClickListener(this);
-        constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
+
+        once.setChecked(true);
 
         repeat.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -245,6 +242,138 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
             }
         });
 
+        task_name.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    taskName_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        task_place.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    taskPlace_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        start_time.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    deadLine_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        end_time.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    deadLine_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        ringtone_selector.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    ringtone_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        image_name.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (count > 0){
+
+                    image_layout.setBackgroundResource(R.drawable.border);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
     }
 
     @Override
@@ -258,18 +387,36 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
             }
             case R.id.start_time: {
 
+                Calendar dateTime = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
                 int hour = calendar.get(Calendar.HOUR_OF_DAY);
                 int minute = calendar.get(Calendar.MINUTE);
+
+                datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+
+                        dateTime.set(Calendar.YEAR, year);
+                        dateTime.set(Calendar.MONTH, month);
+                        dateTime.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                        timePickerDialog.show();
+                    }
+                }, year, month, day);
+
+                datePickerDialog.setTitle("Select Start Date");
+                datePickerDialog.show();
 
                 timePickerDialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
 
-                        Calendar datetime = Calendar.getInstance();
-                        datetime.set(Calendar.HOUR_OF_DAY, selectedHour);
-                        datetime.set(Calendar.MINUTE, selectedMinute);
-                        datetime.set(Calendar.SECOND, 0);
-                        startTimeInMillis = datetime.getTimeInMillis();
+                        //Calendar time = Calendar.getInstance();
+                        dateTime.set(Calendar.HOUR_OF_DAY, selectedHour);
+                        dateTime.set(Calendar.MINUTE, selectedMinute);
+                        dateTime.set(Calendar.SECOND, 0);
+                        startTimeInMillis = dateTime.getTimeInMillis();
 
                         startTime.setTime(startTimeInMillis);
                         start_time.setText(dateFormat.format(startTime));
@@ -277,23 +424,39 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                 }, hour, minute, false);
 
                 timePickerDialog.setTitle("Select Start Time");
-                timePickerDialog.show();
                 break;
             }
             case R.id.end_time: {
 
+                Calendar dateTime = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
                 int hour = calendar.get(Calendar.HOUR_OF_DAY);
                 int minute = calendar.get(Calendar.MINUTE);
+
+                datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+
+                        dateTime.set(Calendar.YEAR, year);
+                        dateTime.set(Calendar.MONTH, month);
+                        dateTime.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                        timePickerDialog.show();
+                    }
+                }, year, month, day);
+
+                datePickerDialog.setTitle("Select End Date");
+                datePickerDialog.show();
 
                 timePickerDialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
 
-                        Calendar datetime = Calendar.getInstance();
-                        datetime.set(Calendar.HOUR_OF_DAY, selectedHour);
-                        datetime.set(Calendar.MINUTE, selectedMinute);
-                        datetime.set(Calendar.SECOND, 0);
-                        endTimeInMillis = datetime.getTimeInMillis();
+                        dateTime.set(Calendar.HOUR_OF_DAY, selectedHour);
+                        dateTime.set(Calendar.MINUTE, selectedMinute);
+                        dateTime.set(Calendar.SECOND, 0);
+                        endTimeInMillis = dateTime.getTimeInMillis();
 
                         endTime.setTime(endTimeInMillis);
                         end_time.setText(dateFormat.format(endTime));
@@ -301,7 +464,7 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                 }, hour, minute, false);
 
                 timePickerDialog.setTitle("Select End Time");
-                timePickerDialog.show();
+
                 break;
             }
             case R.id.ringtone_selector: {
@@ -364,7 +527,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                 break;
             }
             case R.id.add_btn: {
-                createTask();
+                //createTask();
+                validate();
                 break;
             }
         }
@@ -381,10 +545,10 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                 photos = data.getExtras().getParcelableArrayList(UnsplashPickerActivity.EXTRA_PHOTOS);
                 photourl = photos.get(0).getUrls().getSmall();
                 photos.get(0).getLinks().getDownload();
-                image_name.setText(photos.get(0).getId());
+                image_name.setText(photos.get(0).getId() + ".jpg");
             } else if (requestCode == Constants.CAMERA_REQUEST) {
                 photourl = null;
-                //imageUri = data.getData();
+                image_name.setText(getFileName(imageUri));
             } else if (requestCode == Constants.RINGTONE_REQUEST && data != null) {
                 tuneUri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
 
@@ -397,7 +561,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                 }
             }
         } else {
-            Toast.makeText(getApplicationContext(), "No Image selected!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "No Image selected!", Toast.LENGTH_SHORT).show();
+            showFlashBar("No Image selected!");
         }
     }
 
@@ -454,22 +619,45 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
             tasks.setFromSplash("1");
             tasks.setAlaramID(alarmId);
 
+            TaskApp.getWorkManager().enqueue(TaskApp.getTaskUploadRequest(data.build()));
+            TaskApp.getWorkManager().getWorkInfoByIdLiveData(TaskApp.getUploadRequestID())
+                    .observe(NewTaskActivity.this,workInfo -> {
+                        if (workInfo!=null && workInfo.getState().isFinished()){
+                            if (!workInfo.getOutputData().getString("result").equals("success")){
+                                Toast.makeText(getApplicationContext(),workInfo.getOutputData().getString("result"),Toast.LENGTH_LONG);
+                            }
+                        }
+                    });
 
-
-            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
-                    .setConstraints(constraints)
-                    .setInputData(data.build())
-                    .build();
-            workManager.enqueue(oneTimeWorkRequest);
-            /*TaskApp.getFirestore().collection("Tasks")
-                    .document(taskid)
-                    .set(tasks);*/
             makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
-            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
             setAlarmStartTime(startTimeInMillis);
             setAlarmEndTime(endTimeInMillis);
             TaskApp.getTaskRepo().insertTasks(tasks);
-        } else if (imageUri != null && photourl == null) {
+            Intent intent = new Intent(this, Home.class);
+            startActivity(intent);
+            finish();
+
+            /*TaskApp.getFirestore().collection("Tasks")
+                    .document(taskid)
+                    .set(tasks)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
+                                Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
+                                //Intent intent = new Intent(context, Home.class);
+                                //startActivity(intent);
+                                setAlarmStartTime(startTimeInMillis);
+                                setAlarmEndTime(endTimeInMillis);
+                                TaskApp.getTaskRepo().insertTasks(tasks);
+                                //dialog.dismiss();
+
+                            }
+                        }
+                    });*/
+        }
+        else if (imageUri != null && photourl == null) {
 
             final StorageReference fileRef = TaskApp.getStorage().child("Tasks").child(taskid).child("Attatchment").child("mountains" + "." + getExtension(imageUri));
             fileRef.putFile(imageUri)
@@ -504,17 +692,22 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                                             tasks.setFromSplash("0");
                                             tasks.setAlaramID(alarmId);
 
-
-                                            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
-                                                    .setConstraints(constraints)
-                                                    .setInputData(data.build())
-                                                    .build();
-                                            workManager.enqueue(oneTimeWorkRequest);
+                                            TaskApp.getWorkManager().enqueue(TaskApp.getTaskUploadRequest(data.build()));
+                                            TaskApp.getWorkManager().getWorkInfoByIdLiveData(TaskApp.getUploadRequestID())
+                                                    .observe(NewTaskActivity.this,workInfo -> {
+                                                        if (workInfo!=null && workInfo.getState().isFinished()){
+                                                            if (!workInfo.getOutputData().getString("result").equals("success")){
+                                                                Toast.makeText(getApplicationContext(),workInfo.getOutputData().getString("result"),Toast.LENGTH_LONG);
+                                                            }
+                                                        }
+                                                    });
                                             makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
-                                            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
                                             setAlarmStartTime(startTimeInMillis);
                                             setAlarmEndTime(endTimeInMillis);
                                             TaskApp.getTaskRepo().insertTasks(tasks);
+                                            Intent intent = new Intent(NewTaskActivity.this, Home.class);
+                                            startActivity(intent);
+                                            finish();
 
                                             /*TaskApp.getFirestore().collection("Tasks")
                                                     .document(taskid)
@@ -546,7 +739,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
                             Toast.makeText(getApplicationContext(), exception.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
-        } else {
+        }
+        else {
             tasks.setName(taskName);
             tasks.setLocation(taskPlace);
             tasks.setStartTime(new Timestamp(startTime));
@@ -570,23 +764,26 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
 
 
 
-            oneTimeWorkRequest = new OneTimeWorkRequest.Builder(TaskStartWorker.class)
-                    .setConstraints(constraints)
-                    .setInputData(data.build())
-                    .build();
-            workManager.enqueue(oneTimeWorkRequest);
-            /*TaskApp.getFirestore().collection("Tasks")
-                    .document(taskid)
-                    .set(tasks);*/
+            TaskApp.getWorkManager().enqueue(TaskApp.getTaskUploadRequest(data.build()));
+            TaskApp.getWorkManager().getWorkInfoByIdLiveData(TaskApp.getUploadRequestID())
+                    .observe(NewTaskActivity.this,workInfo -> {
+                        if (workInfo!=null && workInfo.getState().isFinished()){
+                            if (!workInfo.getOutputData().getString("result").equals("success")){
+                                Toast.makeText(getApplicationContext(),workInfo.getOutputData().getString("result"),Toast.LENGTH_LONG);
+                            }
+                        }
+                    });
+
             makeStatusNotification(false, "Task Created", "Success Your task has been created.", context);
-            Toast.makeText(getApplicationContext(), "Your task has been created", Toast.LENGTH_SHORT).show();
             setAlarmStartTime(startTimeInMillis);
             setAlarmEndTime(endTimeInMillis);
             TaskApp.getTaskRepo().insertTasks(tasks);
+            Intent intent = new Intent(NewTaskActivity.this, Home.class);
+            startActivity(intent);
+            finish();
         }
 
     }
-
 
     public String getFileName(Uri uri) {
         String result = null;
@@ -642,43 +839,47 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);*/
 
         if (repeatOn == 0) {
-            /*if (mon.isChecked()){
-                calendar.set(Calendar.DAY_OF_MONTH,Calendar.MONDAY);
-                monintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);;
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), monintent);
-            } if (tue.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.TUESDAY);
-                tueintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), tueintent);
-            } if (wed.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.WEDNESDAY);
-                wedintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), wedintent);
-            } if (thu.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.THURSDAY);
-                thuintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), thuintent);
-            } if (fri.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.FRIDAY);
-                friintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), friintent);
-            } if (sat.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.SATURDAY);
-                satintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), satintent);
-            } if (sun.isChecked()) {
-                calendar.set(Calendar.DAY_OF_MONTH, Calendar.SUNDAY);
-                sunintent = PendingIntent.getBroadcast(NewTask.this, 0, myIntent, 0);
-                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), sunintent);
-            } else if (weekdays.size()==0) {*/
+
             pendingIntent = PendingIntent.getBroadcast(context, alarmId, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.set(AlarmManager.RTC, startTime, pendingIntent);
 
 
         } else if (repeatOn == 1) {
-            pendingIntent = PendingIntent.getBroadcast(context, alarmId, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-            alarmManager.setRepeating(AlarmManager.RTC, startTime, AlarmManager.INTERVAL_DAY, pendingIntent);
+           /* if (mon.isChecked()){
+                calendar.set(Calendar.DAY_OF_MONTH,Calendar.MONDAY);
+                monintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);;
+                alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(),AlarmManager.INTERVAL_DAY, monintent);
+            } if (tue.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.TUESDAY);
+                tueintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), tueintent);
+            } if (wed.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.WEDNESDAY);
+                wedintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), wedintent);
+            } if (thu.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.THURSDAY);
+                thuintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), thuintent);
+            } if (fri.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.FRIDAY);
+                friintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), friintent);
+            } if (sat.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.SATURDAY);
+                satintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), satintent);
+            } if (sun.isChecked()) {
+                calendar.set(Calendar.DAY_OF_MONTH, Calendar.SUNDAY);
+                sunintent = PendingIntent.getBroadcast(NewTaskActivity.this, 0, myIntent, 0);
+                alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), sunintent);
+            } else if (daysList.size()==0) {*/
+                pendingIntent = PendingIntent.getBroadcast(context, alarmId, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
+                alarmManager.setRepeating(AlarmManager.RTC, startTime, AlarmManager.INTERVAL_DAY, pendingIntent);
+
+
+
 
         } else if (repeatOn == 2) {
             pendingIntent = PendingIntent.getBroadcast(context, alarmId, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -959,6 +1160,70 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
         if (TextUtils.isEmpty(task_name.getText().toString())){
 
             taskName_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  taskName_layout.getTop()).setDuration(1000).start();
+            task_name.requestFocus();
+            showFlashBar("Enter Task name!");
+            return;
         }
+        if (TextUtils.isEmpty(task_place.getText().toString())){
+
+            taskPlace_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  taskPlace_layout.getTop()).setDuration(1000).start();
+            task_place.requestFocus();
+            showFlashBar("Enter Task place!");
+            return;
+        }
+        if (TextUtils.isEmpty(start_time.getText().toString())){
+
+            deadLine_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  deadLine_layout.getTop()).setDuration(1000).start();
+            start_time.requestFocus();
+            showFlashBar("Enter Task's start time!");
+            return;
+        }
+        if (TextUtils.isEmpty(end_time.getText().toString())){
+
+            deadLine_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  deadLine_layout.getTop()).setDuration(1000).start();
+            end_time.requestFocus();
+            showFlashBar("Enter Task's end time!");
+            return;
+        }
+        if (TextUtils.isEmpty(ringtone_selector.getText().toString()) || tuneUri == null){
+
+            ringtone_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  ringtone_layout.getTop()).setDuration(1000).start();
+            ringtone_selector.requestFocus();
+            showFlashBar("Please select ringtone for your task!");
+            return;
+        }
+        /*if (photourl == null && imageUri == null) {
+
+            image_layout.setBackgroundResource(R.drawable.error_border);
+
+            ObjectAnimator.ofInt(scrollView, "scrollY",  image_layout.getTop()).setDuration(1000).start();
+            image_layout.requestFocus();
+            showFlashBar("Please select diplay picture for your task!");
+            return;
+        }*/
+        else {
+            createTask();
+        }
+    }
+
+    private void showFlashBar(String msg){
+
+        Flashbar flashbar = new Flashbar.Builder(NewTaskActivity.this)
+                .gravity(Flashbar.Gravity.BOTTOM)
+                .duration(3000)
+                .message(msg)
+                .backgroundColorRes(R.color.themeColor)
+                .build();
+        flashbar.show();
     }
 }
