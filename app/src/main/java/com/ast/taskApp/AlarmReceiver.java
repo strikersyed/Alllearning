@@ -15,6 +15,10 @@ import androidx.work.Data;
 
 import com.ast.taskApp.Models.Tasks;
 import com.ast.taskApp.Utils.NotificationUtils;
+import com.google.firebase.Timestamp;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
@@ -22,6 +26,9 @@ public class AlarmReceiver extends BroadcastReceiver {
     public static String TaskID, taskName, ringtone ;
     public static boolean vibration, ringcheck;
     Data.Builder data;
+    SimpleDateFormat sdf;
+    Date d;
+    String dayOfTheWeek;
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -33,6 +40,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         vibration = intent.getExtras().getBoolean("vibration");
         ringcheck = intent.getExtras().getBoolean("ringcheck");
         data = new Data.Builder();
+        sdf = new SimpleDateFormat("EEEE");
+        d = new Date();
+        dayOfTheWeek = sdf.format(d);
 
         final NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
         Tasks tasks = TaskApp.getTaskRepo().getTaskbyId(TaskID);
@@ -40,29 +50,39 @@ public class AlarmReceiver extends BroadcastReceiver {
         //name = tasks.getName();
 
         if (intent.getAction().equals("startTask") || intent.getAction().equals("endTask")) {
-            if (intent.getExtras().get("ringcheck").equals(true)) {
-                if (tasks.getTuneUrl() == null) {
-                    alarmtone = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM);
-                    if (alarmtone == null) {
-                        alarmtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                    }
-                } else {
-                    alarmtone = Uri.parse(tasks.getTuneUrl());
-                }
-                Ringtone ringtone = RingtoneManager.getRingtone(context, alarmtone);
-                ringtone.play();
-                CountDownTimer countDownTimer = new CountDownTimer(20000, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
+            /*if (tasks.getRepeatOn()==0) {
+                if (tasks.getWeekdays().size() > 0) {
+                    for (int i=0; i <tasks.getWeekdays().size();i++) {
+                        if (tasks.getWeekdays().get(i)==dayOfTheWeek.substring(0,2)){
 
-                    }
 
-                    @Override
-                    public void onFinish() {
-                        ringtone.stop();
-                        notificationManagerCompat.cancel(2);
-                    }
-                }.start();
+                    }*/
+                    if (intent.getExtras().get("ringcheck").equals(true)) {
+                        if (tasks.getTuneUrl() == null) {
+                            alarmtone = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM);
+                            if (alarmtone == null) {
+                                alarmtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                            }
+                        } else {
+                            alarmtone = Uri.parse(tasks.getTuneUrl());
+                        }
+                        Ringtone ringtone = RingtoneManager.getRingtone(context, alarmtone);
+                        ringtone.play();
+                        CountDownTimer countDownTimer = new CountDownTimer(20000, 1000) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                ringtone.stop();
+                                notificationManagerCompat.cancel(2);
+                            }
+                        }.start();
+
+
+
             } else {
 
             }
@@ -101,8 +121,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                 tasks.setTaskStatus(3);
                 TaskApp.getTaskRepo().updateTask(tasks);
             }
-
-
         }
 
         if (intent.getAction().toString().equals("start_task")){

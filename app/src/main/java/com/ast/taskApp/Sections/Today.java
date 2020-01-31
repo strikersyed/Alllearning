@@ -54,7 +54,7 @@ public class Today extends Section {
         void onitemClick (int position);
         void onstartClick (int position,String listname,String taskID);
         void oncompleteclick (int position,String listname, String taskID);
-        void onlongclick (int position,String listname, String taskID);
+        void onlongclick (int position,String listname, Tasks task);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class Today extends Section {
                 });
             }
 
-        if (selected.contains(String.valueOf(position))){
+        if (selected.contains(String.valueOf(viewHolder.getLayoutPosition()-2))){
             viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
         }
         else {
@@ -146,7 +146,7 @@ public class Today extends Section {
             }
         });
 
-        viewHolder.todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
+        /*viewHolder.todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 if (selected.contains(String.valueOf(position))){
@@ -157,9 +157,10 @@ public class Today extends Section {
                     selected.add(String.valueOf(position));
                     viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
                 }
+                onItemClick.onlongclick(position,"today",tasks.get(position).getTaskID());
                 return true;
             }
-        });
+        });*/
 
     }
 
@@ -191,24 +192,32 @@ public class Today extends Section {
             start_tdytask.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onItemClick.onstartClick(getLayoutPosition(),"today",tasks.get(getLayoutPosition() - 1).getTaskID());
+                    onItemClick.onstartClick(getLayoutPosition(),"today",tasks.get(getLayoutPosition() - 2).getTaskID());
                 }
             });
 
             complt_tdytsk.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onItemClick.oncompleteclick(getLayoutPosition(),"today",tasks.get(getLayoutPosition() - 1).getTaskID());
+                    onItemClick.oncompleteclick(getLayoutPosition(),"today",tasks.get(getLayoutPosition() - 2).getTaskID());
                 }
             });
 
-            /*todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
+            todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-
+                    if (selected.contains(String.valueOf(getLayoutPosition()-2))){
+                        selected.remove(String.valueOf(getLayoutPosition()-2));
+                        todaydesciptlayout.setBackgroundResource(R.drawable.border);
+                    }
+                    else {
+                        selected.add(String.valueOf(getLayoutPosition()-2));
+                        todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+                    }
+                    onItemClick.onlongclick(getLayoutPosition(),"today",tasks.get(getLayoutPosition()-2));
                     return true;
                 }
-            });*/
+            });
 
         }
 

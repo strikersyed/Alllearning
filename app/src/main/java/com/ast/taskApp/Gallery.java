@@ -31,6 +31,9 @@ public class Gallery extends AppCompatActivity {
             Intent intent = new Intent(Gallery.this, NewTaskActivity.class);
             intent.putExtra("url",photos.get(0).getUrls().getLarge());
             startActivity(intent);
+
+
+
         }
     }
 

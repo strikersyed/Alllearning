@@ -3,6 +3,8 @@ package com.ast.taskApp.Sections;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -10,6 +12,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ast.taskApp.Imageslider;
@@ -38,9 +42,10 @@ public class Late extends Section {
     Context context;
     private StorageReference mStorageRef;
     private OnItemClick onItemClick;
-    private ArrayList<String> selected = new ArrayList<>();
+    ArrayList<String> selected = new ArrayList<>();
+    ArrayList<Boolean> checklist;
 
-    public Late(ArrayList<Tasks> tasks, Context context,OnItemClick onitemclick,OnItemClick onstartclick,OnItemClick oncompleteclick) {
+    public Late(ArrayList<Tasks> tasks, Context context,OnItemClick onitemclick,OnItemClick onstartclick,OnItemClick oncompleteclick,ArrayList<Boolean> checklist) {
         super(SectionParameters.builder()
                 .itemResourceId(R.layout.itemlist_view)
                 .headerResourceId(R.layout.item_headerlayout)
@@ -48,13 +53,15 @@ public class Late extends Section {
         this.tasks = tasks;
         this.context = context;
         this.onItemClick = onitemclick;
+        this.checklist = checklist;
+
     }
 
     public interface OnItemClick {
         void onitemClick (int position);
         void onstartClick (int position,String listname,String taskID);
         void oncompleteclick (int position,String listname, String taskID);
-        void onlongclick (int position,String listname, String taskID);
+        void onlongclick (int position,String listname, Tasks task);
     }
 
     @Override
@@ -137,14 +144,49 @@ public class Late extends Section {
             }
         });
 
-        if (selected.contains(String.valueOf(position))){
-            viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+
+        if (checklist.get(3)) {
+
+            if (selected.contains(String.valueOf(viewHolder.getLayoutPosition() - 4))) {
+                viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+            } else {
+                viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
+            }
         }
         else {
-            viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
+            selected.clear();
+            checklist.set(3,true);
         }
 
+
         viewHolder.todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (checklist.get(3)) {
+                    if (selected.contains(String.valueOf(viewHolder.getLayoutPosition()-4))){
+                        selected.remove(String.valueOf(viewHolder.getLayoutPosition()-4));
+                        //viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
+
+
+                    }
+                    else {
+                        selected.add(String.valueOf(viewHolder.getLayoutPosition()-4));
+                        //viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+                    }
+
+                    onItemClick.onlongclick(viewHolder.getAdapterPosition(),"late",tasks.get(viewHolder.getLayoutPosition()-4));
+                }
+                else {
+                    checklist.set(3,true);
+                }
+                return true;
+            }
+        });
+
+
+
+
+        /*viewHolder.todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 if (selected.contains(String.valueOf(position))){
@@ -155,9 +197,10 @@ public class Late extends Section {
                     selected.add(String.valueOf(position));
                     viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
                 }
+                onItemClick.onlongclick(position,"late",tasks.get(position).getTaskID());
                 return true;
             }
-        });
+        });*/
 
 
     }
@@ -190,16 +233,19 @@ public class Late extends Section {
             start_tdytask.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onItemClick.onstartClick(getLayoutPosition(),"late",tasks.get(getLayoutPosition() - 1).getTaskID());
+                    onItemClick.onstartClick(getLayoutPosition(),"late",tasks.get(getLayoutPosition() - 4).getTaskID());
                 }
             });
 
             complt_tdytsk.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onItemClick.oncompleteclick(getLayoutPosition(),"late",tasks.get(getLayoutPosition() - 1).getTaskID());
+                    onItemClick.oncompleteclick(getLayoutPosition(),"late",tasks.get(getLayoutPosition() - 4).getTaskID());
                 }
             });
+
+
+
 
 
 
@@ -224,7 +270,6 @@ public class Late extends Section {
             todayheader = itemView.findViewById(R.id.headertoday);
         }
     }
-
 
 
 

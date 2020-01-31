@@ -9,6 +9,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,6 +27,7 @@ import com.guojunustb.library.WeekViewEvent;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class CalenderView extends AppCompatActivity implements WeekDayView.MonthChangeListener, WeekDayView.EventLongPressListener, WeekDayView.EventClickListener, WeekDayView.ScrollListener {
 
@@ -86,21 +88,10 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
             }
         });*/
 
-        WeekViewEvent event = new WeekViewEvent();
+
         tasks = (ArrayList<Tasks>) TaskApp.getTaskRepo().getAllTasks(TaskApp.getAuth().getCurrentUser().getUid());
 
-        if (tasks.size()>0) {
 
-            for (int i = 0; i < tasks.size(); i++) {
-                startTime = Calendar.getInstance();
-                endTime = Calendar.getInstance();
-                startTime.setTimeInMillis(tasks.get(i).getStartTime().toDate().getTime());
-                endTime.setTimeInMillis(tasks.get(i).getEndTime().toDate().getTime());
-                event = new WeekViewEvent(i, tasks.get(i).getName(), startTime, endTime);
-                event.setColor(getResources().getColor(R.color.blue));
-                events.add(event);
-            }
-        }
 
 
 
@@ -181,9 +172,30 @@ public class CalenderView extends AppCompatActivity implements WeekDayView.Month
     @Override
     public List<WeekViewEvent> onMonthChange(int newYear, int newMonth) {
 
+        Toast.makeText(this,"Testing",Toast.LENGTH_LONG).show();
+        startTime = Calendar.getInstance();
 
+        if (tasks.size()>0) {
+            startTime.setTime(tasks.get(0).getStartTime().toDate());
+            if (tasks.get(0).getStartTime().toDate().getMonth()==(newMonth - 1) &&
+                    startTime.get(Calendar.YEAR)==newYear) {
+                for (int i = 0; i < tasks.size(); i++) {
+                    WeekViewEvent event = new WeekViewEvent();
+                    startTime = Calendar.getInstance();
+                    endTime = Calendar.getInstance();
+                    startTime.setTimeInMillis(tasks.get(i).getStartTime().toDate().getTime());
+                    endTime.setTimeInMillis(tasks.get(i).getEndTime().toDate().getTime());
+                    event = new WeekViewEvent(i, tasks.get(i).getName(), startTime, endTime);
+                    event.setColor(getResources().getColor(R.color.blue));
+                    events.add(event);
 
+                }
+            }
+            else {
+                events.clear();
+            }
 
+        }
        /* List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
         Calendar startTime = Calendar.getInstance();
         Calendar endTime = Calendar.getInstance();

@@ -34,11 +34,18 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(Build.VERSION.SDK_INT >16) {
+            Window window = this.getWindow();
+            //    window.setBackgroundDrawableResource(R.drawable.splash_bg);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(getResources().getColor(R.color.blue));
+        }
+        setContentView(R.layout.activity_splash);
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         googleSignIn = GoogleSignIn.getLastSignedInAccount(this);
         merlinsBeard = new MerlinsBeard.Builder().build(this);
-
         if (auth.getCurrentUser()==null){
             //startsplash();
 
@@ -184,14 +191,7 @@ public class SplashActivity extends AppCompatActivity {
             }*/
 
 
-        if(Build.VERSION.SDK_INT >16) {
-            Window window = this.getWindow();
-            //    window.setBackgroundDrawableResource(R.drawable.splash_bg);
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(getResources().getColor(R.color.blue));
-        }
-        setContentView(R.layout.activity_splash);
+
 
     }
 

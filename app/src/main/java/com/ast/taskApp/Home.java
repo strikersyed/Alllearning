@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -20,8 +22,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Data;
 
 import com.ast.taskApp.Sections.Late;
 import com.ast.taskApp.Sections.Today;
@@ -91,6 +95,12 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
     ArrayList<Tasks> tasksNew;
     Context context;
     SectionedRecyclerViewAdapter viewAdapter;
+    ArrayList<Tasks> selected = new ArrayList<>();
+    ActionMode actionMode;
+    Data.Builder data;
+    Late late;
+    Boolean ucheck,tocheck,tomcheck,lcheck;
+    ArrayList<Boolean> checklist;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,17 +116,21 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
 
         setContentView(R.layout.activity_home);
         context = this;
+        data = new Data.Builder();
         auth = FirebaseAuth.getInstance();
         merlinsBeard = new MerlinsBeard.Builder().build(this);
         toolbar = findViewById(R.id.toolbar);
 //        sidenav = findViewById(R.id.sidenavigation);
         taskDB = new TaskDB(this);
+        ucheck = true;
+        tocheck = false;
+        tomcheck = false;
+        lcheck = true;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         editor = sharedPreferences.edit();
         newtask = findViewById(R.id.newtask_btn);
         recyclerView = findViewById(R.id.recycler);
         viewAdapter = new SectionedRecyclerViewAdapter();
-
         /*recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(this,LinearLayoutManager.VERTICAL));*/
@@ -126,7 +140,11 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
         tomorrowtsks = new ArrayList<>();
         upcomingtsks = new ArrayList<>();
         db = FirebaseFirestore.getInstance();
-
+        checklist = new ArrayList<>();
+        checklist.add(true);
+        checklist.add(true);
+        checklist.add(true);
+        checklist.add(true);
         GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder()
                 .requestEmail()
                 .build();
@@ -171,6 +189,8 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
                 }
             }
         }
+
+
         Comparator<Tasks> c = new Comparator<Tasks>() {
 
             @Override
@@ -181,11 +201,13 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
         Collections.sort(tasksNew, c);
         //adapter = new HomeVewAdapter(Home.this, tasks, Home.this, Home.this, Home.this);
         viewAdapter = new SectionedRecyclerViewAdapter();
-        viewAdapter.addSection(new Upcoming(upcomingtsks,context,this,this,this));
-        viewAdapter.addSection(new Today(todaytsks,context,this,this,this));
-        viewAdapter.addSection(new Tomorrow(tomorrowtsks,context,this,this,this));
-        viewAdapter.addSection(new Late(tasksNew,context,this,this,this));
+        viewAdapter.addSection("upcoming",new Upcoming(upcomingtsks,context,this,this,this,ucheck));
+        viewAdapter.addSection("today",new Today(todaytsks,context,this,this,this));
+        viewAdapter.addSection("tomorrow",new Tomorrow(tomorrowtsks,context,this,this,this));
+        viewAdapter.addSection("late",new Late(tasksNew,context,this,this,this,checklist));
         recyclerView.setAdapter(viewAdapter);
+
+
         //adapter.notifyDataSetChanged();
         /*if (merlinsBeard.isConnected()) {
             adapter = new HomeVewAdapter(this, tasks, this, this, this);
@@ -303,8 +325,11 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
                             }
                         });
 
+
+
             }
         });
+
 
         todayoverview.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -582,8 +607,11 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
         if (tasks.get(index).getTaskStatus()!=3) {
             if (tasks.get(index).getTaskStatus() == 0 || tasks.get(index).getTaskStatus() == 2) {
                 ImageView imageView = recyclerView.findViewById(R.id.start_todaytask);
-                imageView.setImageResource(R.mipmap.start);
-                db.collection("Tasks").document(taskid).update("taskStatus", 1);
+                imageView.setImageResource(R.mipmap.pause);
+                data.putString("TaskID",taskid);
+                data.putInt("status",1);
+                TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
+                //db.collection("Tasks").document(taskid).update("taskStatus", 1);
                 Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
                 if (taskss != null) {
                     taskss.setTaskStatus(1);
@@ -595,8 +623,11 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
 
             } else {
                 ImageView imageView = recyclerView.findViewById(R.id.start_todaytask);
-                imageView.setImageResource(R.mipmap.pause);
-                db.collection("Tasks").document(taskid).update("taskStatus", 2);
+                imageView.setImageResource(R.mipmap.start);
+                data.putString("TaskID",taskid);
+                data.putInt("status",2);
+                TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
+                //db.collection("Tasks").document(taskid).update("taskStatus", 2);
                 Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
                 if (taskss != null) {
                     taskss.setTaskStatus(2);
@@ -659,8 +690,11 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
             tasks.clear();
             tasks.addAll(tasksNew);
         }
-        db.collection("Tasks").document(taskid).update("taskStatus",4);
-        Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(tasks.get(index).getTaskID());
+        data.putString("TaskID",taskid);
+        data.putInt("status",4);
+        TaskApp.getWorkManager().enqueue(TaskApp.getTaskUpdateRequest(data.build()));
+        //db.collection("Tasks").document(taskid).update("taskStatus",4);
+        Tasks taskss = TaskApp.getTaskRepo().getTaskbyId(taskid);
         if (taskss!=null){
             taskss.setTaskStatus(4);
             TaskApp.getTaskRepo().updateTask(taskss);
@@ -681,19 +715,137 @@ public class Home extends AppCompatActivity implements DragListener,Upcoming.OnI
         //TaskApp.getTaskRepo().deleteTasks(tasks.get(position).getTaskID());
         viewAdapter.notifyItemRemoved(position);
         viewAdapter.notifyDataSetChanged();
-
-
     }
 
     @Override
-    public void onlongclick(int position, String listname,String taskID) {
+    public void onlongclick(int position, String listname,Tasks task) {
+        //LinearLayout linearLayout = recyclerView.findViewById(R.id.todaydescript);
+        if (selected.contains(task)){
+            selected.remove(task);
+            //linearLayout.setBackgroundResource(R.drawable.border);
+        }
+        else {
 
+            selected.add(task);
+            //linearLayout.setBackgroundResource(R.drawable.selected_border);
+            //viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+        }
+        if (selected.size()>0){
+            if (actionMode==null) {
+                actionMode = ((AppCompatActivity) this).startSupportActionMode(actionModeCallbacks);
+                toolbar.setVisibility(View.GONE);
+            }
+        }
+        else {
+            if (actionMode!=null) {
+                actionMode.finish();
+                toolbar.setVisibility(View.VISIBLE);
+            }
+        }
+        viewAdapter.getAdapterForSection("late").notifyItemChanged(position-4);
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
         finish();
     }
+
+    private ActionMode.Callback actionModeCallbacks = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            menu.add("Delete");
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+
+
+            if (selected.size()>0) {
+            /*    Comparator<String> c = new Comparator<String>() {
+                    @Override
+                    public int compare(String o1, String o2) {
+                        if(Integer.parseInt(o1.replaceAll("[\\D]",""))>Integer.parseInt(o2.replaceAll("[\\D]",""))){
+                            return 0;
+                        } else {
+                            return 1;
+                        }
+                    }
+                };
+                Collections.sort(selected,c);*/
+
+                //viewAdapter.notifyItemRangeRemoved((Integer.parseInt(selected.get(0).replaceAll("[\\D]","")) - 1),selected.size());
+                //recyclerView.removeViewAt((Integer.parseInt(selected.get(0).replaceAll("[\\D]",""))));
+                for (int i = selected.size(); i>0;i--){
+
+                    //recyclerView.removeViewAt((Integer.parseInt(selected.get(i).replaceAll("[\\D]",""))));
+                 /*    if (selected.get(i - 1).replaceAll("[0-9]","").equals("upcoming")){
+                        upcomingtsks.remove(i - 1);
+                        ucheck = false;
+                    } else if (selected.get(i - 1).replaceAll("[0-9]","").equals("today")){
+                        todaytsks.remove(i - 1);
+                    } else if (selected.get(i - 1).replaceAll("[0-9]","").equals("tomorrow")){
+                        tomorrowtsks.remove(i - 1);
+                    } else if (selected.get(i - 1).replaceAll("[0-9]","").equals("late")){
+                        //recyclerView.removeViewAt((Integer.parseInt(selected.get(i).replaceAll("[\\D]",""))));
+
+                        tasksNew.remove((selected.get(i - 1)));
+                        //viewAdapter.notifyItemRangeChanged(Integer.parseInt(selected.get(i).replaceAll("[\\D]","")),tasksNew.size());
+                        checklist.set(3,false);
+                    }*/
+                    if (selected.get(i - 1).getTaskStatus() != 4){
+                        if (Math.abs(TimeUnit.MILLISECONDS.toHours(selected.get(i - 1).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
+                            upcomingtsks.remove(selected.get(i - 1));
+                            ucheck = false;
+                        }
+                        else if (Math.abs(TimeUnit.MILLISECONDS.toHours(selected.get(i - 1).getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
+                                && Math.abs(TimeUnit.MILLISECONDS.toHours(selected.get(i - 1).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
+                            todaytsks.remove(selected.get(i - 1));
+                        }
+                        else if (Math.abs(TimeUnit.MILLISECONDS.toHours(selected.get(i - 1).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
+                                && Math.abs(TimeUnit.MILLISECONDS.toHours(selected.get(i - 1).getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ){
+                            tomorrowtsks.remove(selected.get(i - 1));
+                        }
+                        else {
+                            tasksNew.remove((selected.get(i - 1)));
+                            //viewAdapter.notifyItemRangeChanged(Integer.parseInt(selected.get(i).replaceAll("[\\D]","")),tasksNew.size());
+                            checklist.set(3,false);
+                        }
+                    }
+                     //viewAdapter.getAdapterForSection("late").notifyItemRemoved(Integer.parseInt(selected.get(i).replaceAll("[\\D]","")));
+                    //viewAdapter.notifyItemRemoved((Integer.parseInt(selected.get(i).replaceAll("[\\D]",""))));
+                    //recyclerView.getAdapter().notifyItemRemoved(Integer.parseInt(selected.get((i - 1)).replaceAll("[\\D]","")));
+                    /*if (selected.get(i).replaceAll("[0-9]","").equals("late")){
+                        viewAdapter.getAdapterForSection("late").notifyItemRemoved(((Integer.parseInt(selected.get(i).replaceAll("[\\D]",""))) - 4));
+                    }*/
+
+
+
+                }
+
+                viewAdapter.notifyDataSetChanged();
+                //viewAdapter.notifyItemRangeRemoved(0,selected.size());
+                selected.clear();
+                actionMode.finish();
+
+            }
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            actionMode = null;
+            toolbar.setVisibility(View.VISIBLE);
+
+        }
+    };
+
+
+
 }

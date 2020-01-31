@@ -166,22 +166,22 @@ public class TodayOverview extends AppCompatActivity implements DragListener {
             if (tasks.getTaskStatus() != 4 && tasks.getTaskStatus() != 3){
                 if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) <= 12) {
                     upcomingtsks.add(tasks);
-                }
+                    }
                 else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime()) - Timestamp.now().toDate().getTime()) > 12
                         && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime())) < 24) {
                     todaytsks.add(tasks);
-                }
+                    }
                 else if (Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))>=24
                         && Math.abs(TimeUnit.MILLISECONDS.toHours(tasks.getStartTime().toDate().getTime() - Timestamp.now().toDate().getTime()))<=48 ){
                     tomorrowtsks.add(tasks);
-                }
+                    }
                 else {
                     tasksNew.add(tasks);
-                }
+                    }
                 }
             else if (tasks.getTaskStatus()==3){
                 tasksNew.add(tasks);
-            }
+                }
             }
         Comparator<Tasks> c = new Comparator<Tasks>() {
 

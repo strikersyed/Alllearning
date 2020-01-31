@@ -460,6 +460,8 @@ public class NewTaskActivity extends BaseActivity implements View.OnClickListene
 
                         endTime.setTime(endTimeInMillis);
                         end_time.setText(dateFormat.format(endTime));
+
+
                     }
                 }, hour, minute, false);
 

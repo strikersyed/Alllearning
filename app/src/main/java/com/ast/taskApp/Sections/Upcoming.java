@@ -40,8 +40,9 @@ public class Upcoming extends Section {
     private StorageReference mStorageRef;
     private OnItemClick onItemClick;
     private ArrayList<String> selected = new ArrayList<>();
+    Boolean ucheck;
 
-    public Upcoming(ArrayList<Tasks> tasks, Context context,OnItemClick onitemclick,OnItemClick onstartclick,OnItemClick oncompleteclick) {
+    public Upcoming(ArrayList<Tasks> tasks, Context context,OnItemClick onitemclick,OnItemClick onstartclick,OnItemClick oncompleteclick,Boolean ucheck) {
         super(SectionParameters.builder()
                 .itemResourceId(R.layout.itemlist_view)
                 .headerResourceId(R.layout.item_headerlayout)
@@ -49,13 +50,14 @@ public class Upcoming extends Section {
         this.tasks = tasks;
         this.context = context;
         this.onItemClick = onitemclick;
+        this.ucheck = ucheck;
     }
 
     public interface OnItemClick {
         void onitemClick (int position);
         void onstartClick (int position,String listname,String taskID);
         void oncompleteclick (int position,String listname, String taskID);
-        void onlongclick (int position,String listname, String taskID);
+        void onlongclick (int position,String listname, Tasks task);
     }
 
     @Override
@@ -129,12 +131,15 @@ public class Upcoming extends Section {
                 });
             }
 
-
-        if (selected.contains(String.valueOf(position))){
-            viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+        if (ucheck) {
+            if (selected.contains(String.valueOf(viewHolder.getLayoutPosition() - 1))) {
+                viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+            } else {
+                viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
+            }
         }
         else {
-            viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
+            selected.clear();
         }
 
 
@@ -148,20 +153,7 @@ public class Upcoming extends Section {
             }
         });
 
-        viewHolder.todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (selected.contains(String.valueOf(position))){
-                    selected.remove(String.valueOf(position));
-                    viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.border);
-                }
-                else {
-                    selected.add(String.valueOf(position));
-                    viewHolder.todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
-                }
-                return true;
-            }
-        });
+
 
     }
 
@@ -205,13 +197,26 @@ public class Upcoming extends Section {
                 }
             });
 
-            /*todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
+            todaydesciptlayout.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-
+                    if (selected.size()>0) {
+                        if (selected.contains(String.valueOf(getLayoutPosition() - 1))) {
+                            selected.remove(String.valueOf(getLayoutPosition() - 1));
+                            todaydesciptlayout.setBackgroundResource(R.drawable.border);
+                        } else {
+                            selected.add(String.valueOf(getLayoutPosition() - 1));
+                            todaydesciptlayout.setBackgroundResource(R.drawable.selected_border);
+                        }
+                        ucheck = true;
+                        onItemClick.onlongclick(getLayoutPosition(), "upcoming", tasks.get(getLayoutPosition() - 1));
+                    }
+                    else {
+                        ucheck = false;
+                    }
                     return true;
                 }
-            });*/
+            });
 
 
 
